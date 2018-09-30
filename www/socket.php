@@ -255,6 +255,15 @@ function onClose($connect) {
 
 function onMessage($connect, $data) {
     $payload = explode(' ', decode($data)['payload']);
+    if ($payload[1] === 'typing') {
+        $message = json_decode($payload[0]);
+        if (isset($GLOBALS['pool'][$message->{'mate'}])) {
+            if ($GLOBALS['pool'][$message->{'mate'}] === 'chat') {
+                $message->{'typing'} = 1;
+                fwrite($GLOBALS['ids'][$message->{'mate'}], encode(json_encode($message)));
+            }
+        }
+    }
     if ($payload[1] === 'in') {
         $GLOBALS['pool'][$payload[0]] = $payload[2];
         $GLOBALS['ids'][$payload[0]] = $connect;

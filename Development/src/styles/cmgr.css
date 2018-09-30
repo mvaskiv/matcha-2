@@ -343,6 +343,14 @@ p.counter.posts {
     margin-top: 11px;
     color: #292929!important;
 }
+
+.chat-details p {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 185px;
+}
+
 .chat-details {
     font-weight: 200;
     color: #292929;
@@ -405,6 +413,7 @@ p.counter.posts {
     background-color: #7fe665;
     color: #333333;
     padding: 5px;
+    word-break: break-all;
     padding-left: 8px;
     padding-right: 9px;
     border-radius: 10px;
@@ -593,4 +602,12 @@ p.counter.posts {
     10% { transform: translateX(-380px); }
     90% { transform: translateX(-380px); }
     100% { transform: translateX(0px); }
+  }
+
+  .typing-indicator {
+      margin: 0px;
+      margin-left: 0px;
+      margin-top: 5px;
+      width: 80px;
+      height: 65px;
   }

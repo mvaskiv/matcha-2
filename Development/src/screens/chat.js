@@ -1,6 +1,15 @@
 import React, { Component } from 'react';
 import API from '../backyard/api';
 
+
+const TypingIndicator = (props) => {
+    return (
+        <div className='message-bubble group'>
+            <img className='typing-indicator' alt='' src={require('../img/typing.gif')} />
+        </div>
+    );
+}
+
 const MessageBubble = (props) => {
     let timestamp =  props.msg.timestamp.split(" ")[1].split(":");
 
@@ -22,7 +31,6 @@ const MessageBubble = (props) => {
         )
     }
 }
-
 
 const MessageGroup = (props) => {
     if (props.msg.sender === props.myid) {
@@ -48,14 +56,21 @@ class ChatScreen extends Component {
             body: '',
             me: false, 
             audio: true,
+            typing: false,
         }
         this._bootstrapAsync();
         this.url = require("../sound/light.mp3");
         this.audio = new Audio(this.url);
         this.props.conn.onmessage = (e) => {
             let data = JSON.parse(e.data);
-            console.log(data);
-            if (data.chat === 1) {
+            if (data.typing && data.chat === this.props.chat.id) {
+                if (!this.state.typing) {
+                    this.setState({typing: true});
+                    if (this.messages && this.messages.lastChild) {this.messages.lastChild.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});}         
+                    setTimeout(() => this.setState({typing: false}), 2500);
+                }
+            } else if (data.chat === 1) {
+                this.setState({typing: false});
                 this.state.dataSource.push({
                     chat: data.id,
                     body: data.body,
@@ -164,6 +179,10 @@ class ChatScreen extends Component {
     }
 
     _textIn = (e) => {
+        this.props.conn.send(JSON.stringify({
+            mate: this.props.chat.mate_id,
+            chat: this.props.chat.id,
+        }) + ' typing');
         this.setState({[e.target.name]:e.target.value});
     }
 
@@ -187,6 +206,7 @@ class ChatScreen extends Component {
                 <div className='messages-map' ref={(ref) => this.messages = ref}>
               
                         { Messages }
+                        { this.state.typing && <TypingIndicator /> }
                    
                     
                 </div>
@@ -338,9 +358,9 @@ class Chats extends Component {
                         </div>
                         <div className='chat-scroll' style={{height: this.props.locked ? 'calc(100vh - 260px)' : 480 + 'px'}}>
                             <div className='profile-info-full chat' style={{left: this.state.chatOpen ? -33 + '%' : 17.5 + 'px'}}>
-                                <div className='matches-preview'>
+                                {this.state.Matches[0] && <div className='matches-preview'>
                                     { Matches }
-                                </div>
+                                </div> }
                                 { Chats }
                             </div>
                             <div className='chat-body' style={{height: this.props.locked ? 'calc(100vh - 275px)' : 465 + 'px', left: this.state.chatOpen ? 0 + '%' : 110 + '%'}}>
