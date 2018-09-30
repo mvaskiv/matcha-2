@@ -1,0 +1,70 @@
+version: "3"
+
+services:
+  socketserver:
+    build: 
+      context: ./bin/socket
+    container_name: 'png-sockets'
+    restart: 'always'
+    ports:
+      - "8200:8200"
+  webserver:
+    build: 
+      context: ./bin/webserver
+    container_name: 'png-webserver'
+    restart: 'always'
+    ports:
+      - "2525:2525"
+      - "80:80"
+      - "443:443"
+    links: 
+      - mysql
+    volumes: 
+      - ${DOCUMENT_ROOT-./www}:/var/www/html
+      - ${PHP_INI-./config/php/php.ini}:/usr/local/etc/php/php.ini
+      - ${VHOSTS_DIR-./config/vhosts}:/etc/apache2/sites-enabled
+      - ${LOG_DIR-./logs/apache2}:/var/log/apache2
+  mysql:
+    build: ./bin/mysql
+    container_name: 'png-mysql'
+    restart: 'always'
+    ports:
+      - "3306:3306"
+    # volumes: 
+    #   - ${MYSQL_DATA_DIR-./data/mysql}:/var/lib/mysql
+    #   - ${MYSQL_LOG_DIR-./logs/mysql}:/var/log/mysql
+    #   - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: matcha
+      MYSQL_DATABASE: matcha
+      MYSQL_USER: matcha
+      MYSQL_PASSWORD: matcha
+  elasticsearch:
+    build:
+      context: ./bin/elastic
+    container_name: 'png-search'
+    volumes:
+      - ${DOCUMENT_ROOT-./bin/elastic/config/elastic.yml}:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - matcha
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: 'png-phpmyadmin'
+    links:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+    ports:
+      - '8080:80'
+    volumes: 
+      - /sessions
+    
+networks:
+  matcha:
+    driver: bridge
