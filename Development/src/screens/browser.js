@@ -147,12 +147,16 @@ const PersonBubble = (props) => {
 }
 
 const TagBubble = (props) => {
-    return (
-        <div className='tag-bubble'>
-            <p>{props.text}</p>
-            <i className="fas fa-times-circle" onClick={() => props.delete(props.text)}></i>
-        </div>
-    );
+    if (props.text !== '') {
+        return (
+            <div className='tag-bubble'>
+                <p>{props.text}</p>
+                <i className="fas fa-times-circle" onClick={() => props.delete(props.text)}></i>
+            </div>
+        );
+    } else {
+        return null;
+    }
 }
 
 export default class Browser extends Component {
@@ -165,6 +169,7 @@ export default class Browser extends Component {
             gender: '',
             seeking: '',
             tags: '',
+            tagIn: '',
             n: 0,
             complete: false,
             dataSource: [],
@@ -279,6 +284,18 @@ export default class Browser extends Component {
         } 
     }
 
+    _addTag = (e) => {
+        if (e.key === ' ') {
+            if (e.target.value.length > 1) {
+                let a = this.state.tags;
+                a += ' ' + e.target.value.trim();
+                this.setState({tags: a});
+            }
+            this.setState({tagIn: ''});
+        } 
+
+    }
+
     _deleteTag = (word) => {
         let str = this.state.tags;
         let n = str.search(word);
@@ -338,7 +355,7 @@ export default class Browser extends Component {
                     <div className='search-criteria'>
                         <div className='search-age'>
                             <label>Interests:</label>
-                            <input type='text' placeholder='Separated by space' value={this.state.tags} onChange={this._onInput} name='tags' />
+                            <input type='text' placeholder='Separated by space' value={this.state.tagIn} onChange={this._onInput} onKeyPress={this._addTag} name='tagIn' />
                             <div className='tags-cnt'>
                                 { Tags }
                             </div>
