@@ -11,6 +11,55 @@ function getUsers($post) {
     ));
 }
 
+
+function geoSort($post) {
+    $tags = '';
+    if ($post['tags']) {
+        $tag_list = explode(' ', trim($post['tags']));
+        $tags = "AND tags LIKE '%" . $tag_list[0] . "%'";
+        if (isset($tag_list[1])) {
+            for ($i = 1; isset($tag_list[$i]); $i++) {
+                $tags .= " OR tags LIKE '%" . $tag_list[$i] . "%'";
+            }
+        }
+    } else {
+        $tags = '';
+    }
+    $stmt = $GLOBALS['conn']->prepare(
+    "SELECT
+        *, (
+        6371 * acos (
+        cos ( radians('50.468006') )
+        * cos( radians( latitude ) )
+        * cos( radians( longitude ) - radians('30.464214') )
+        + sin ( radians('50.468006') )
+        * sin( radians( latitude ) )
+        )
+    ) AS distance,
+    DATEDIFF(CURDATE(), dob)/365 AS Age
+    FROM users
+    WHERE gender = '" . $post['gender'] . "'
+    AND seeking = '" . $post['seeking'] . "'
+    "
+    . $tags .
+    "
+    HAVING distance < " . $post['distance'] . "
+    AND Age < " . $post['u_a'] . "
+    AND Age > " . $post['l_a'] . "
+    ORDER BY distance ASC
+    LIMIT " . $post['n'] . ", 35;"
+    );
+    $stmt->execute();
+    $result = $stmt->fetchAll();
+    return json_encode(array(
+        'data' => $result,
+        'query' => $stmt
+    ));
+}
+
+
+
+
 function getBlacklist($post) {
     $stmt = $GLOBALS['conn']->prepare(
         "SELECT * FROM `blacklist` WHERE user = " . $post['myid'] . ";"

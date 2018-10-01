@@ -147,6 +147,7 @@ class Home extends Component {
       super(props);
       this.state = {
         menuShown: false,
+        me: false,
         menu: false,
         popup: false,
         display: false,
@@ -170,6 +171,7 @@ class Home extends Component {
     async componentDidMount() {
         let data = await JSON.parse(localStorage.getItem('user_data'));
         this.setState({myid: data.id});
+        this.setState({me: data});
         this.conn.onopen = (e) => {
             this.conn.send(data.id + ' in app');
             window.addEventListener('beforeunload', () => this.conn.send(this.state.myid + ' out'));
@@ -229,7 +231,7 @@ class Home extends Component {
   
             <PopUp shown={this.state.popup} toggle={this._togglePopup} display={this.state.display} lock={this._lockMenu} locked={this.state.lockMenu} conn={this.conn} n_open={this.state.n_open} clear={this._clearNotification} />
             <div className='main-view'>
-                {this.state.myid && <Browser myid={this.state.myid} size={ this.state.lockMenu } />}
+                {this.state.myid && <Browser myid={this.state.myid} size={ this.state.lockMenu } me={this.state.me} />}
                 {this.state.notification && <Notification data={ this.state.notification } open={ this._openNotification }/>}
             </div>
             

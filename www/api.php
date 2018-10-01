@@ -8,6 +8,7 @@ $post = json_decode(file_get_contents('php://input'), true);
 
 $methods = array(
     'getUsers' => 'getUsers',
+    'geoSort' => 'geoSort',
     'getBlacklist' => 'getBlacklist',
     'login' => 'login',
     'chats' => 'chats',

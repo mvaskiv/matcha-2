@@ -45,6 +45,7 @@ class App extends Component {
   
         // </div>
         <MainScreen />
+        // null
       );
     } else {
       return (
