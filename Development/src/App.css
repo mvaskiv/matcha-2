@@ -344,6 +344,7 @@ body, html {
   
   background-color: rgba(29,29,29,0.9);
   transition: 250ms;
+  z-index: 99
 }
 
 .search-bubble {
@@ -501,6 +502,37 @@ body, html {
   max-width: 110px;
   height: 22px;
   
+}
+
+.tag-const {
+  position: relative;
+  float: left;
+  background-color: #e39;
+  margin-top: 5px;
+  margin-bottom: 7px;
+  border-radius: 30px;
+  margin-right: 10px;
+  /* max-width: 100px; */
+  /* width: auto; */
+  height: 22px;
+}
+
+.tag-const p {
+  position: relative;
+  left: 0;
+  top: 0px;
+  color: #fff;
+  /* width: auto; */
+  max-width: 90px;
+  padding: 5px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding-top: 3px;
+  padding-left: 9px;
+  padding-right: 11px;
+  font-weight: 100;
+  font-size: 13px;
+  margin: 0!important;
 }
 
 .tag-bubble p {

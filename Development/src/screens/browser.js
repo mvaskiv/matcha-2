@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import API, { GEO } from '../backyard/api';
+import { TagBubble } from '../const/bubbles';
 
 
 
@@ -163,18 +164,7 @@ const PersonBubble = (props) => {
     }
 }
 
-const TagBubble = (props) => {
-    if (props.text !== '') {
-        return (
-            <div className='tag-bubble'>
-                <p>{props.text}</p>
-                <i className="fas fa-times-circle" onClick={() => props.delete(props.text)}></i>
-            </div>
-        );
-    } else {
-        return null;
-    }
-}
+
 
 export default class Browser extends Component {
     constructor(props) {
@@ -203,7 +193,6 @@ export default class Browser extends Component {
         const tags = this.props.me.tags.split(' ');
         for (let i = 0, len = tags.length; i < len; i++) {
             if (profile.tags.search(tags[i]) !== - 1){
-                console.warn('tag-match', tags[i], profile.tags, profile.tags.search(tags[i]));
                 return true;
             }
         }
@@ -216,11 +205,13 @@ export default class Browser extends Component {
             if (this._matchTags(obj)) {
                 ds.push(obj);
             }
+            return true;
         })
         data.map((obj) => {
             if (!this._matchTags(obj)) {
                 ds.push(obj);
             }
+            return true;
         })
         this.setState({dataSource: ds});
     }
@@ -299,8 +290,9 @@ export default class Browser extends Component {
         this.state.dataSource.map((key, i) => {
             if (key.id === n) {
                 this.setState({preview: i});
-                return ;
+                return true;
             }
+            return false;
         })
     }
 
@@ -391,7 +383,7 @@ export default class Browser extends Component {
                         <div className='search-age'>
                             <label>Min. Fame:</label>
                             <p className='l'>{this.state.fame}</p>
-                            <input type='range' min='0' max='999' step='1' value={this.state.fame} onChange={this._onInput} name='fame' />
+                            <input type='range' min='0' max='99' step='1' value={this.state.fame} onChange={this._onInput} name='fame' />
                             <p className='r'>&#9733;</p>
                         </div>
                     </div>

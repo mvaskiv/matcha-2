@@ -47,7 +47,9 @@ function geoSort($post) {
     . $gender .
     " AND seeking = '" . $post['seeking'] . "' "
     . $tags .
-    "HAVING distance < " . $post['distance'] . "
+    "
+    AND fame >= " . $post['fame'] . "
+     HAVING distance < " . $post['distance'] . "
     AND Age < " . $post['u_a'] . "
     AND Age > " . $post['l_a'] . "
     ORDER BY fame DESC, distance ASC
@@ -60,9 +62,6 @@ function geoSort($post) {
         'query' => $stmt
     ));
 }
-
-
-
 
 function getBlacklist($post) {
     $stmt = $GLOBALS['conn']->prepare(

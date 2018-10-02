@@ -57,6 +57,12 @@ class LoginForm extends Component {
     _textIn = (e) => {
       this.setState({[e.target.name]:e.target.value});
     }
+
+    _keyPress = (e) => {
+      if (e.key === 'Enter') {
+        this._logIn();
+      }
+    }
   
     render() {
       return (
@@ -64,7 +70,7 @@ class LoginForm extends Component {
           <div className="login-form-sm">
             <h2>Sign In</h2>
             <input name='login' onChange={this._textIn} type='text' placeholder="Login or Email" value={this.state.login} className='form-input-sm' />
-            <input name='password' onChange={this._textIn} type='password' placeholder="Password" value={this.state.password} className='form-input-sm' />
+            <input name='password' onChange={this._textIn} type='password' placeholder="Password" value={this.state.password} className='form-input-sm' onKeyPress={this._keyPress} />
             <h3 className="enter" onClick={this._logIn}>Enter</h3>
           </div>
           <div className="login-msg-sm">

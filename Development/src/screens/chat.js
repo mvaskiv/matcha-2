@@ -10,43 +10,52 @@ const TypingIndicator = (props) => {
     );
 }
 
+const MessageGroup = (props) => {
+    if (props.msg.sender === props.myid) {
+        return (
+            <div className='message-bubble group'>
+                <div className='bubble-cnt sent'>
+                    <p className='message-body sent group'>{ props.msg.body }</p>
+                </div>
+            </div>
+        )
+    } else {
+        return (
+            <div className='message-bubble group'>
+                <div className='bubble-cnt received'>
+                    <p className='message-body received group'>{ props.msg.body }</p>
+                </div>
+            </div>
+        )
+    }
+}
+
 const MessageBubble = (props) => {
     let timestamp =  props.msg.timestamp.split(" ")[1].split(":");
 
     if (props.msg.sender === props.myid) {
         return (
             <div className='message-bubble'>
-                <img className='message-avatar sent' src={ props.chat.avatar } alt='' />
-                <p className='message-body sent'>{ props.msg.body }</p>
-                <p className='message-time sent'>{timestamp[0] + ':' + timestamp[1]}</p>
+                <div className='bubble-cnt sent'>
+                    <img className='message-avatar sent' src={ props.chat.avatar } alt='' />
+                    <p className='message-body sent'>{ props.msg.body }</p>
+                    <p className='message-time sent'>{timestamp[0] + ':' + timestamp[1]}</p>
+                </div>
             </div>
         )
     } else {
         return (
             <div className='message-bubble'>
-                <img className='message-avatar received' src={ props.chat.avatar } alt='' />
-                <p className='message-body received'>{ props.msg.body }</p>
-                <p className='message-time received'>{timestamp[0] + ':' + timestamp[1]}</p>
+                <div className='bubble-cnt received'>
+                    <img className='message-avatar received' src={ props.chat.avatar } alt='' />
+                    <p className='message-body received'>{ props.msg.body }</p>
+                    <p className='message-time received'>{timestamp[0] + ':' + timestamp[1]}</p>
+                </div>
             </div>
         )
     }
 }
 
-const MessageGroup = (props) => {
-    if (props.msg.sender === props.myid) {
-        return (
-            <div className='message-bubble group'>
-                <p className='message-body sent group'>{ props.msg.body }</p>
-            </div>
-        )
-    } else {
-        return (
-            <div className='message-bubble group'>
-                <p className='message-body received group'>{ props.msg.body }</p>
-            </div>
-        )
-    }
-}
 
 class ChatScreen extends Component {
     constructor(props) {
@@ -62,7 +71,7 @@ class ChatScreen extends Component {
         this._bootstrapAsync();
         this.url = require("../sound/light.mp3");
         this.audio = new Audio(this.url);
-        this.typingTime;
+        this.typingTime = null;
         this.props.conn.onmessage = (e) => {
             let data = JSON.parse(e.data);
             if (data.typing && data.chat === this.props.chat.id) {
@@ -125,8 +134,7 @@ class ChatScreen extends Component {
                 this.setState({n: this.state.n + 20});
                 this.setState({updated: false});
                 this.props.conn.send(this.props.myid + ' in chat');
-                setTimeout(() => this.setState({scrollEnabled: true}), 400);
-                setTimeout(() => {if (this.messages && this.messages.lastChild) {this.messages.lastChild.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"})}}, 150);      
+                setTimeout(() => this.setState({scrollEnabled: true}), 300);
             });
         }
         
@@ -228,6 +236,8 @@ class ChatScreen extends Component {
                 if (this.state.dataSource[i + 1] && ((this.state.dataSource[i + 1].sender === prev) || 
                     this.state.dataSource[i + 1].sender === msg.sender)) {
                     return <MessageGroup key={ i } msg={ msg } myid={ this.props.myid } chat={ this.props.chat } />    
+                } else if (this.state.dataSource[i - 1] && (this.state.dataSource[i - 1].sender !== prev)) {
+                    return <MessageBubble key={ i } msg={ msg } myid={ this.props.myid } chat={ this.props.chat } />
                 } else {
                     prev = msg.sender;
                     return <MessageBubble key={ i } msg={ msg } myid={ this.props.myid } chat={ this.props.chat } />
@@ -383,8 +393,8 @@ class Chats extends Component {
             <div>
                 <div id="user-panel" style={{height: this.props.locked ? 'calc(100vh - 190px)' : 550 + 'px', overflowY: !this.state.chat ? 'scroll' : 'hidden'}}>
                     <div className='profile-info'>
-                        <div className='profile-info-full top'>
-                            {!this.state.chatOpen ? <h2>Chats</h2> : <div><p onClick={() => this._openChat(0)} className='chat-back'>return</p><h2 style={{textAlign: 'right'}}>{ this.state.chat.name }</h2></div>}
+                        <div className='profile-info-full top chat'>
+                            {!this.state.chatOpen ? <h2>Chats</h2> : <div className='kostyl'><p onClick={() => this._openChat(0)} className='chat-back'>return</p><h2 style={{textAlign: 'right'}}>{ this.state.chat.name }</h2></div>}
                         </div>
                         <div className='chat-scroll' style={{height: this.props.locked ? 'calc(100vh - 260px)' : 480 + 'px'}}>
                             <div className='profile-info-full chat' style={{left: this.state.chatOpen ? -33 + '%' : 17.5 + 'px'}}>

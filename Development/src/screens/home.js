@@ -3,6 +3,8 @@ import { GEO } from '../backyard/api';
 import Browser from './browser';
 import Chats from './chat';
 
+import { TagBubbleConst } from '../const/bubbles';
+
 class Profile extends Component {
     constructor(props) {
         super(props);
@@ -36,6 +38,22 @@ class Profile extends Component {
     }
 
     render() {
+        let Tags = null;
+        let Pictures = null;
+        if (this.state.info.tags) {
+            let array = this.state.info.tags.split(' ');
+            Tags = array.map((tag, i) => {
+                return <TagBubbleConst text={tag} key={ i } delete={this._deleteTag} />
+            })
+        }
+
+        if (this.state.info.pictures) {
+            let array = this.state.info.pictures.split(' ');
+            Pictures = array.map((pic, i) => {
+                return <PictureThumb pic={ pic } all={ array } key={ i } n={ i } open={ this.props.openImg } />
+            })
+        }
+
         return (
             <div>
                 <div id="user-panel">
@@ -46,7 +64,7 @@ class Profile extends Component {
                     <p className="counter posts">121</p> */}
                     <div className='profile-info'>
                         <div className='profile-info-full top'>
-                            <h2>{ this.state.info.first_name } { this.state.info.last_name }</h2>
+                            <h2>{ this.state.info.first_name }</h2>
                             <p>{ this.state.city }, {this._getAge(this.state.info.dob)} y.o.</p>
                         </div>
                         <div className='profile-info-half'>
@@ -59,7 +77,20 @@ class Profile extends Component {
                         </div>
                         <div className='profile-info-full'>
                             <label>Interested in:</label>
-                            <p>{ this.state.info.tags }</p>
+                            {/* <p>{ this.state.info.tags }</p> */}
+                            <div className='tags-cnt'>
+                                { Tags }
+                            </div>
+                        </div>
+                        <div className='profile-info-full' style={{marginTop: 10 + 'px'}}>
+                            <label>About me:</label>
+                            <p>{ this.state.info.about }</p>
+                        </div>
+                        <div className='profile-info-full' style={{marginTop: 10 + 'px'}}>
+                            <label>Pictures:</label>
+                            <div className='picture-thumb'>
+                                { Pictures }
+                            </div>
                         </div>
                     </div>
                     {/* <a onclick="return logMeOut();"><p className="logout" id="logout_d">Log out</p></a> */}
@@ -67,6 +98,12 @@ class Profile extends Component {
             </div>
         );
     }
+}
+
+const PictureThumb = (props) => {
+    return (
+        <img alt='' src={props.pic} onClick={() => props.open(props.all, props.n)} />
+    )
 }
 
 class Settings extends Component {
@@ -116,7 +153,7 @@ class PopUp extends Component {
         } else if (this.props.display === 1) {
             menuItem = <Chats locked={this.props.locked} conn={this.props.conn} n_open={this.props.n_open} clear={this.props.clear} />
         } else if (this.props.display === 2) {
-            menuItem = <Profile />
+            menuItem = <Profile openImg={this.props.openImg} />
         } else if (this.props.display === 3) {    
             menuItem = <Settings />
         }
@@ -155,6 +192,7 @@ class Home extends Component {
         lockMenu: false,
         notification: [],
         n_open: false,
+        imgViewer: false,
       }
       this.url = require("../sound/light.mp3");
       this.audio = new Audio(this.url);
@@ -224,6 +262,15 @@ class Home extends Component {
         this.setState({notification: []});
     }
 
+    _openImageView = (array, key) => {
+        this.setState({imgViewer: {
+            images: array,
+            key: key
+        }});
+    }
+    _closeImageView = () => {
+        this.setState({imgViewer: false});
+    }
 
 
     render() {
@@ -247,8 +294,9 @@ class Home extends Component {
                 <p onClick={() => this._getMenuItem(0)}>Home</p>
             </div>
           </header>
-  
-            <PopUp shown={this.state.popup} toggle={this._togglePopup} display={this.state.display} lock={this._lockMenu} locked={this.state.lockMenu} conn={this.conn} n_open={this.state.n_open} clear={this._clearNotification} />
+            
+            {this.state.imgViewer && <PictureViewer images={this.state.imgViewer.images} view={this.state.imgViewer.key} close={this._closeImageView} />}
+            <PopUp shown={this.state.popup} toggle={this._togglePopup} display={this.state.display} lock={this._lockMenu} locked={this.state.lockMenu} conn={this.conn} n_open={this.state.n_open} clear={this._clearNotification} openImg={this._openImageView} />
             <div className='main-view'>
                 {this.state.myid && <Browser myid={this.state.myid} size={ this.state.lockMenu } me={this.state.me} conn={this.conn} />}
                 <div className='notification-container'>
@@ -266,5 +314,62 @@ class Home extends Component {
         );
     }
 }
+
+class PictureViewer extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            dataSource: [],
+            current: -1,
+        }
+    }
+
+    _bootstrapAsync = async () => {
+        return new Promise(resolve => {
+            this.setState({
+                dataSource: this.props.images,
+                current: this.props.view,
+            })
+            resolve('ok');
+        })
+    }
+
+    async componentDidMount() {
+        
+        await this._bootstrapAsync().then(() => this.setState({updated: true}));
+        // setTithis.setState({updated: true});
+    }
+
+    _next = () => {
+        if (this.state.current < this.state.dataSource.length) {
+            this.setState({current: this.state.current + 1});
+        } else {
+            return ;
+        }
+    }
+
+    _prev = () => {
+        if (this.state.current > 0) {
+            this.setState({current: this.state.current - 1});
+        } else {
+            return ;
+        }
+    }
+
+    render () {
+        return (
+            <div className='picture-view'>
+                <div className='close-view' onClick={this.props.close} />
+                <div className='view-container'>
+                    <i className="fas fa-chevron-left" onClick={this._prev}></i>
+                    <img alt='' src={this.state.dataSource[this.state.current]} />
+                    <i className="fas fa-chevron-right" onClick={this._next}></i>
+                </div>
+            </div>
+        );
+    }
+}
+
+
 
 export default Home

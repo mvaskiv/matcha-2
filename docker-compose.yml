@@ -1,13 +1,13 @@
 version: "3"
 
 services:
-  socketserver:
-    build: 
-      context: ./bin/socket
-    container_name: 'png-sockets'
-    restart: 'always'
-    ports:
-      - "8200:8200"
+  # socketserver:
+  #   build: 
+  #     context: ./bin/socket
+  #   container_name: 'png-sockets'
+  #   restart: 'always'
+  #   ports:
+  #     - "8200:8200"
   webserver:
     build: 
       context: ./bin/webserver
@@ -39,19 +39,19 @@ services:
       MYSQL_DATABASE: matcha
       MYSQL_USER: matcha
       MYSQL_PASSWORD: matcha
-  elasticsearch:
-    build:
-      context: ./bin/elastic
-    container_name: 'png-search'
-    volumes:
-      - ${DOCUMENT_ROOT-./bin/elastic/config/elastic.yml}:/usr/share/elasticsearch/config/elasticsearch.yml:ro
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    environment:
-      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
-    networks:
-      - matcha
+  # elasticsearch:
+  #   build:
+  #     context: ./bin/elastic
+  #   container_name: 'png-search'
+  #   volumes:
+  #     - ${DOCUMENT_ROOT-./bin/elastic/config/elastic.yml}:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+  #   ports:
+  #     - "9200:9200"
+  #     - "9300:9300"
+  #   environment:
+  #     ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+  #   networks:
+  #     - matcha
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: 'png-phpmyadmin'
@@ -65,6 +65,6 @@ services:
     volumes: 
       - /sessions
     
-networks:
-  matcha:
-    driver: bridge
+# networks:
+#   matcha:
+#     driver: bridge
