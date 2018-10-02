@@ -16,15 +16,21 @@ function geoSort($post) {
     $tags = '';
     if ($post['tags']) {
         $tag_list = explode(' ', trim($post['tags']));
-        $tags = "AND tags LIKE '%" . $tag_list[0] . "%'";
+        $tags = "AND tags LIKE '%" . $tag_list[0] . "%' ";
         if (isset($tag_list[1])) {
             for ($i = 1; isset($tag_list[$i]); $i++) {
-                $tags .= " OR tags LIKE '%" . $tag_list[$i] . "%'";
+                $tags .= " OR tags LIKE '%" . $tag_list[$i] . "%' ";
             }
         }
     } else {
         $tags = '';
     }
+    if ($post['gender'] == 'b') {
+        $gender = "WHERE gender IN ('f', 'm')";
+    } else {
+        $gender = "WHERE gender = '" . $post['gender'] . "'";
+    }
+
     $stmt = $GLOBALS['conn']->prepare(
     "SELECT
         *, (
@@ -37,16 +43,14 @@ function geoSort($post) {
         )
     ) AS distance,
     DATEDIFF(CURDATE(), dob)/365 AS Age
-    FROM users
-    WHERE gender = '" . $post['gender'] . "'
-    AND seeking = '" . $post['seeking'] . "'
-    "
+    FROM users "
+    . $gender .
+    " AND seeking = '" . $post['seeking'] . "' "
     . $tags .
-    "
-    HAVING distance < " . $post['distance'] . "
+    "HAVING distance < " . $post['distance'] . "
     AND Age < " . $post['u_a'] . "
     AND Age > " . $post['l_a'] . "
-    ORDER BY distance ASC
+    ORDER BY fame DESC, distance ASC
     LIMIT " . $post['n'] . ", 35;"
     );
     $stmt->execute();
@@ -110,7 +114,7 @@ function chats($post) {
 
 function chatid($post) {
     $stmt = $GLOBALS['conn']->prepare(
-        "SELECT * FROM `messages` WHERE chat = '" . $post['id'] . "';"
+        "SELECT * FROM `messages` WHERE chat = " . $post['id'] . " ORDER BY id DESC LIMIT " . $post['n'] . ", 20;"
     );
     $stmt->execute();
     $result = $stmt->fetchAll();
@@ -310,11 +314,12 @@ function unblock($post) {
 function matches($post) {
     $stmt = $GLOBALS['conn']->prepare(
         "SELECT * FROM `matches`
-            LEFT JOIN `users` ON matches.second = users.id AND users.id 
+            LEFT JOIN `users` ON matches.second = users.id AND users.id <> ?
             OR matches.first = users.id AND users.id <> ? 
             WHERE matches.first = ? OR matches.second = ?;"
     );
     $stmt->execute([
+        $post['id'],
         $post['id'],
         $post['id'],
         $post['id']
@@ -323,6 +328,7 @@ function matches($post) {
     if ($result) {
         return json_encode(array(
             'data' => $result,
+            'query' => $stmt,
             'ok' => true,
         ));
     } else {

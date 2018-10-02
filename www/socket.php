@@ -255,7 +255,31 @@ function onClose($connect) {
 
 function onMessage($connect, $data) {
     $payload = explode(' ', decode($data)['payload']);
-    if ($payload[1] === 'typing') {
+    if ($payload[1] === 'like') {
+        if (isset($GLOBALS['pool'][$message->{'mate'}])) {
+            $message->{'like'} = 1;
+            fwrite($GLOBALS['ids'][$message->{'mate'}], encode(json_encode($message)));
+        }
+    }
+    else if ($payload[1] === 'likeback') {
+        if (isset($GLOBALS['pool'][$message->{'mate'}])) {
+            $message->{'likeback'} = 1;
+            fwrite($GLOBALS['ids'][$message->{'mate'}], encode(json_encode($message)));
+        }
+    }
+    else if ($payload[1] === 'unlike') {
+        if (isset($GLOBALS['pool'][$message->{'mate'}])) {
+            $message->{'unlike'} = 1;
+            fwrite($GLOBALS['ids'][$message->{'mate'}], encode(json_encode($message)));
+        }
+    }
+    else if ($payload[1] === 'check') {
+        if (isset($GLOBALS['pool'][$message->{'mate'}])) {
+            $message->{'check'} = 1;
+            fwrite($GLOBALS['ids'][$message->{'mate'}], encode(json_encode($message)));
+        }
+    }
+    else if ($payload[1] === 'typing') {
         $message = json_decode($payload[0]);
         if (isset($GLOBALS['pool'][$message->{'mate'}])) {
             if ($GLOBALS['pool'][$message->{'mate'}] === 'chat') {
@@ -264,24 +288,22 @@ function onMessage($connect, $data) {
             }
         }
     }
-    if ($payload[1] === 'in') {
+    else if ($payload[1] === 'in') {
         $GLOBALS['pool'][$payload[0]] = $payload[2];
         $GLOBALS['ids'][$payload[0]] = $connect;
-    } if ($payload[1] === 'out') {
+    } else if ($payload[1] === 'out') {
         unset($GLOBALS['pool'][$payload[0]]);
     } else {
         $message = json_decode(decode($data)['payload']);
         if (isset($GLOBALS['pool'][$message->{'mate'}])) {
             if ($GLOBALS['pool'][$message->{'mate'}] === 'app') {
-                $message->{'chat'} = 0;
+                $message->{'chat'} = 2;
                 fwrite($GLOBALS['ids'][$message->{'mate'}], encode(json_encode($message)));
             } else if ($GLOBALS['pool'][$message->{'mate'}] === 'chat') {
                 $message->{'chat'} = 1;
                 fwrite($GLOBALS['ids'][$message->{'mate'}], encode(json_encode($message)));
-            }
-            
+            }   
         }
-       
     }
     print_r($GLOBALS['pool']);
     print_r($GLOBALS['ids']);
