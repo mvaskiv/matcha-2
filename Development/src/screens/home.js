@@ -134,10 +134,11 @@ class PopUp extends Component {
 const Notification = (props) => {
     return (
         <div className='notification'>
-        <img src={ props.data.sender_avatar } alt='' />
+            <img src={ props.data.sender_avatar } alt='' />
             <h2>{ props.data.sender_name }</h2>
-            <p>{ props.data.body }</p>
+            <p>{props.data.id && 'Message: '}{ props.data.body }</p>
             <h3 onClick={ () => props.open({id: props.data.id, mate_id: props.data.myid, name: props.data.sender_name, avatar: props.data.sender_avatar}) }>open</h3>
+            {props.n === 0 && <p className='clear-notifications' onClick={props.clear}>clear</p>}
         </div>
     );
 }
@@ -152,7 +153,7 @@ class Home extends Component {
         popup: false,
         display: false,
         lockMenu: false,
-        notification: false,
+        notification: [],
         n_open: false,
       }
       this.url = require("../sound/light.mp3");
@@ -160,10 +161,15 @@ class Home extends Component {
       this.conn = new WebSocket('ws://' + window.location.hostname +  ':8200');
       this.conn.onmessage = (e) => {
           if (e.data !== 'refresh' && e.data !== 'connected') {
-              console.log('e.data');
-              this.setState({notification: JSON.parse(e.data)});
-              setTimeout(() => this.setState({notification: false}), 4300);
-              this.audio.play();
+            let data = JSON.parse(e.data);
+              if (data.chat === 2) {      
+                let a = this.state.notification;
+                if (a.length >= 5) {a.shift()}
+                a.push(data);
+                this.setState({notification: a});
+                // setTimeout(() => this.setState({notification: false}), 4300);
+                this.audio.play();
+              }
           }
       }
     }
@@ -205,7 +211,6 @@ class Home extends Component {
     }
 
     _openNotification = (chat) => {
-        console.log('notification opened');
         this.setState({display: 1});
         this.setState({popup: true});
         this.setState({n_open: chat});
@@ -215,7 +220,21 @@ class Home extends Component {
         this.setState({n_open: false});
     }
 
+    _clearAllNotifications = () => {
+        this.setState({notification: []});
+    }
+
+
+
     render() {
+        let Notifications = null;
+
+        if (this.state.notification) {
+            Notifications = this.state.notification.map((data, i) => {
+                return <Notification data={ data } key={ i } n={ i } open={ this._openNotification } clear={this._clearAllNotifications}/>
+            })
+        }
+
         return (
         <div className="App">
           <header className="header">
@@ -231,8 +250,10 @@ class Home extends Component {
   
             <PopUp shown={this.state.popup} toggle={this._togglePopup} display={this.state.display} lock={this._lockMenu} locked={this.state.lockMenu} conn={this.conn} n_open={this.state.n_open} clear={this._clearNotification} />
             <div className='main-view'>
-                {this.state.myid && <Browser myid={this.state.myid} size={ this.state.lockMenu } me={this.state.me} />}
-                {this.state.notification && <Notification data={ this.state.notification } open={ this._openNotification }/>}
+                {this.state.myid && <Browser myid={this.state.myid} size={ this.state.lockMenu } me={this.state.me} conn={this.conn} />}
+                <div className='notification-container'>
+                    { Notifications }
+                </div>
             </div>
             
             {/* <div className="menu-shelf" style={{right: this.state.menuShown ? 0 + 'px' : -450 + 'px'}}>

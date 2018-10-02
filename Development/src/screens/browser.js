@@ -25,6 +25,21 @@ class ProfilePreview extends Component {
         }
     }
 
+    _push(type) {
+        let message = {
+            myid: this.props.me.id,
+            body: type,
+            mate: this.props.info.id,
+            sender_name: this.props.me.first_name,
+            sender_avatar: this.props.me.avatar,
+        }
+        this.props.conn.send(JSON.stringify(message));
+    }
+
+    componentDidMount() {
+        this._push('Checked you out!');
+    }
+
     _getAge(d) {
         var dD = new Date(d);
         var aD = Date.now() - dD.getTime();
@@ -40,8 +55,10 @@ class ProfilePreview extends Component {
             if (res.ok) {
                 if (res.ok === 'match') {
                     alert('Congratulation, you liked each other and can now chat with ' + this.props.info.first_name);
+                    this._push("You have a match!");
                 } else {
                     this.setState({liked: true});
+                    this._push('Liked out!');
                 }
             } else if (!res.ok) {
                 alert('Oops, error on the server side. Please, try again later');
@@ -136,7 +153,7 @@ const PersonBubble = (props) => {
     if (!props.bl.includes(props.info.id)) {
         return (
             <div className='bubble'>
-                <img className='bubble-img' src={props.info.avatar ? props.info.avatar : null} alt='' onClick={() => props.preview(props.info.id)} />
+                <img className='bubble-img' src={props.info.avatar ? props.info.avatar : require('../img/avatar.png')} alt='' onClick={() => props.preview(props.info.id)} />
                 <h3>{props.info.first_name}</h3>
                 <p>{ Math.round(props.info.distance) } km away</p>
             </div>
@@ -170,19 +187,46 @@ export default class Browser extends Component {
             seeking: '',
             tags: '',
             tagIn: '',
+            fame: 0,
             n: 0,
             complete: false,
             dataSource: [],
-            preview: false,
+            preview: -1,
             myid: this.props.myid,
             bl: [],
             searchBubble: false,
-            search: true,
+            search: false,
         }
     }
 
+    _matchTags = (profile) => {
+        const tags = this.props.me.tags.split(' ');
+        for (let i = 0, len = tags.length; i < len; i++) {
+            if (profile.tags.search(tags[i]) !== - 1){
+                console.warn('tag-match', tags[i], profile.tags, profile.tags.search(tags[i]));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    _setDataSource = (data, i) => {
+        let ds = i ? this.state.dataSource : [];
+        data.map((obj) => {
+            if (this._matchTags(obj)) {
+                ds.push(obj);
+            }
+        })
+        data.map((obj) => {
+            if (!this._matchTags(obj)) {
+                ds.push(obj);
+            }
+        })
+        this.setState({dataSource: ds});
+    }
+
     _bootstrapAsync = async () => {
-        console.warn(this.props.me.gender);
+        console.log('asd');
         let state = await this.state;
         state.n = 0;
         state.seeking = this.state.seeking ? this.state.seeking : this.props.me.seeking === 'f' ? 'm' : this.props.me.seeking === 'b' ? 'b' : 'f';
@@ -190,7 +234,8 @@ export default class Browser extends Component {
         this.setState({gender: state.gender});
         API('geoSort', state).then((res) => {
             if (res.data) {
-                this.setState({dataSource: res.data});
+                this._setDataSource(res.data, 0);
+                // this.setState({dataSource: res.data});
                 this.setState({n: this.state.n + 35});
                 if (res.end) {
                     this.setState({complete: true});
@@ -238,12 +283,9 @@ export default class Browser extends Component {
     }
 
     _onScroll = () => {
-        API('getUsers', this.state).then((res) => {
+        API('geoSort', this.state).then((res) => {
             if (res) {
-                res.data.map((person, i) => {
-                    this.state.dataSource.push(person);
-                    return true;
-                })
+                this._setDataSource(res.data, 1);
                 this.setState({n: this.state.n + 35});
                 if (res.end) {
                     this.setState({complete: true});
@@ -263,11 +305,12 @@ export default class Browser extends Component {
     }
 
     _showPreview = (id) => {
+        console.log(id);
         this._searchId(id);
     }
     
     _hidePreview = () => {
-        this.setState({preview: false});
+        this.setState({preview: -1});
     }
 
     _toggleSearch = () => {
@@ -322,8 +365,8 @@ export default class Browser extends Component {
         }
         return (
             <div ref={(ref) => this.users = ref} style={{transition: '300ms', display: 'flex', flexDirection: 'row', width: this.props.size ? 'calc(100vw - 350px)' : 100 + 'vw', height: 95 + 'vh', flexWrap: 'wrap', justifyContent: 'flex-start', overflowY: 'scroll', paddingTop: 15 + 'px'}}>
-                { this.state.preview && <div className='profile-preview-cnt'><div style={{position: 'absolute', height: 100 + '%', width: 100 + '%'}}  onClick={this._hidePreview} />
-                    <ProfilePreview info={this.state.dataSource[this.state.preview]} hide={this._hidePreview} myid={this.state.myid} refresh={this._bootstrapAsync} />
+                { this.state.preview >= 0 && <div className='profile-preview-cnt'><div style={{position: 'absolute', height: 100 + '%', width: 100 + '%'}}  onClick={this._hidePreview} />
+                    <ProfilePreview info={this.state.dataSource[this.state.preview]} hide={this._hidePreview} myid={this.state.myid} me={this.props.me} refresh={this._bootstrapAsync} conn={this.props.conn} />
                 </div> }
                 <div className='search-bubble' style={{top: this.state.searchBubble ? 100 + 'px' : 0 + 'px'}} onClick={this._toggleSearch}>
                     <p>Search Filter</p>
@@ -346,14 +389,22 @@ export default class Browser extends Component {
                     </div>
                     <div className='search-criteria'>
                         <div className='search-age'>
+                            <label>Min. Fame:</label>
+                            <p className='l'>{this.state.fame}</p>
+                            <input type='range' min='0' max='999' step='1' value={this.state.fame} onChange={this._onInput} name='fame' />
+                            <p className='r'>&#9733;</p>
+                        </div>
+                    </div>
+                    <div className='search-criteria'>
+                        <div className='search-age'>
                             <label>Gender:</label>
                             <p onClick={() => this.setState({gender: 'm'})} className='third' style={{color: this.state.gender === 'm' ? '#e39' : '#999'}}>Male</p>
                             <p onClick={() => this.setState({gender: 'f'})} className='third'style={{color: this.state.gender === 'f' ? '#e39' : '#999'}}>Female</p>
                             <p onClick={() => this.setState({gender: 'b'})} className='third'style={{color: this.state.gender === 'b' ? '#e39' : '#999'}}>Both</p>
                         </div>
                     </div>
-                    <div className='search-criteria'>
-                        <div className='search-age'>
+                    <div className='search-criteria' style={{margin: 0}}>
+                        <div className='search-age' style={{margin: 0}}>
                             <label>Interests:</label>
                             <input type='text' placeholder='Separated by space' value={this.state.tagIn} onChange={this._onInput} onKeyPress={this._addTag} name='tagIn' />
                             <div className='tags-cnt'>

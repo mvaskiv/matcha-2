@@ -10,7 +10,7 @@
 
 #user-panel {
     position: absolute;
-    /* overflow: hidden; */
+    overflow: hidden;
     top: 0px;
     right: 0px;
     width: 300px;
@@ -34,9 +34,8 @@
     width: 720px;
     height: 550px;
     border-style: solid;
-    border-radius: 20px;
+    border-radius: 5px;
     border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
     border-width: 1px;
     border-color: #bbb;
     background-color: #fff;
@@ -178,7 +177,7 @@ p.counter.posts {
 
 .profile-info {
     position: absolute;
-    overflow: hidden;
+    /* overflow-y: scroll; */
     top: 17.5px;
     width: 260px;
     padding-left: 20px;
@@ -266,6 +265,7 @@ p.counter.posts {
     position: absolute;
     display: inline-flex;
     flex-direction: column;
+    
     /* height: auto; */
     /* overflow-y: scroll; */
     width: 100%;
@@ -303,7 +303,7 @@ p.counter.posts {
     /* padding-right: 12.5px; */
     padding-bottom: 7.5px;
     top: 0;
-    height: 50px;
+    height: 55px;
     display: flex;
     flex-shrink: 1;
     flex-direction: row;
@@ -311,7 +311,23 @@ p.counter.posts {
     overflow-x: scroll;
 }
 
+.chats-preview {
+    position: relative;
+    width: 285px;
+    margin-left: -17.5px;
+    padding-left: 12.5px;
+    /* padding-right: 12.5px; */
+    padding-bottom: 7.5px;
+    top: 0px;
+
+    display: flex;
+    flex-shrink: 1;
+    flex-direction: column;
+
+}
+
 .chat-preview {
+    flex-shrink: 0;
     position: relative;
     top: 10px;
     width: 100%;
@@ -380,12 +396,15 @@ p.counter.posts {
 .message-bubble {
     position: relative;
     display: flex;
+    /* flex-shrink: 1; */
     /* display: inline-block; */
     width: 100%;
     min-height: 45px;
+    height: auto;
     padding: 0px;
     /* background-color: #eee; */
     margin-bottom: 10px;
+    /* transform: rotate(180deg); */
 }
 
 .message-bubble.group {
@@ -518,6 +537,11 @@ p.counter.posts {
     overflow: hidden;
     padding-bottom: 0px;
     overflow-y: scroll;
+    display: flex;
+    flex-direction: column-reverse;
+    
+    /* transform: rotate(180deg);
+    transform: translateZ(180deg); */
 }
 ::-webkit-scrollbar {
     width: 7.5px;
@@ -537,18 +561,41 @@ p.counter.posts {
     background: #ccc; 
 }
 
-.notification {
+.notification-container {
     position: absolute;
+    right: 0;
+    bottom: 0;
+    /* overflow: hidden; */
+}
+
+.notification {
+    position: relative;
+    
     bottom: 130px;
-    right: -330px;
+    /* right: -330px; */
+    right: 40px;
+    margin-bottom: 10px;
     width: 300px;
     height: 75px;
     border-radius: 12px;
     border: 1px solid #ccc;
-    box-shadow: 0px 2px 25px rgba(29,29,29,0.3);
+    box-shadow: 0px 2px 15px rgba(29,29,29,0.3);
     background-color: #fff;
-    animation: notification;
+    /* animation: notification; */
     animation-duration: 4s;
+}
+
+.clear-notifications {
+    position: absolute;
+    top: -30px!important;
+    left: 250px!important;
+    background-color: #fff;
+    padding-left: 6px;
+    padding-right: 6px;
+    border: 1px solid #ccc;
+    box-shadow: 0px 0px 10px rgba(49,49,49,0.2);
+    border-radius: 10px;
+    cursor: pointer;
 }
 
 .notification img {
@@ -604,10 +651,29 @@ p.counter.posts {
     100% { transform: translateX(0px); }
   }
 
+  /* .message-bubble group typing {
+    position: absolute;
+    bottom: 0;
+  } */
+
+  .typing {
+      position: absolute!important;
+      bottom: 35px!important;
+      left: -37.5px!important;
+      height: 35px!important;
+      z-index: 999;
+      
+  }
+
   .typing-indicator {
       margin: 0px;
-      margin-left: 0px;
-      margin-top: 5px;
-      width: 80px;
-      height: 65px;
+      margin-left: 45px;
+      margin-top: 0px;
+      padding-bottom: 30px;
+      
+      width: 35px;
+      /* transform: scaleX(-1); */
+      filter: grayscale(100%);
+      opacity: 0.8;
+      height: 35px;
   }

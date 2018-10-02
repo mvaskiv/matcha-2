@@ -4,7 +4,7 @@ import API from '../backyard/api';
 
 const TypingIndicator = (props) => {
     return (
-        <div className='message-bubble group'>
+        <div className='typing'>
             <img className='typing-indicator' alt='' src={require('../img/typing.gif')} />
         </div>
     );
@@ -57,21 +57,24 @@ class ChatScreen extends Component {
             me: false, 
             audio: true,
             typing: false,
+            n: 0,
         }
         this._bootstrapAsync();
         this.url = require("../sound/light.mp3");
         this.audio = new Audio(this.url);
+        this.typingTime;
         this.props.conn.onmessage = (e) => {
             let data = JSON.parse(e.data);
             if (data.typing && data.chat === this.props.chat.id) {
                 if (!this.state.typing) {
                     this.setState({typing: true});
-                    if (this.messages && this.messages.lastChild) {this.messages.lastChild.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});}         
-                    setTimeout(() => this.setState({typing: false}), 2500);
+                    clearTimeout(this.typingTime);
+                    // if (this.messages && this.messages.firstChild) {this.messages.firstChild.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});}         
+                    this.typingTime = setTimeout(() => this.setState({typing: false}), 2500);
                 }
             } else if (data.chat === 1) {
                 this.setState({typing: false});
-                this.state.dataSource.push({
+                this.state.dataSource.unshift({
                     chat: data.id,
                     body: data.body,
                     sender: data.myid,
@@ -79,7 +82,10 @@ class ChatScreen extends Component {
                     timestamp: new Date().toISOString().slice(0, 19).replace('T', ' '),
                 });
                 this.setState({updated: true});
-                if (this.messages && this.messages.lastChild) {this.messages.lastChild.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});}             
+                if (this.messages && this.messages.lastChild) {
+                    // this.messages.scrollTo(0, 0);
+                    this.messages.firstChild.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+                }             
                 if (this.state.audio) { this.audio.play() }
             }
         }
@@ -96,34 +102,61 @@ class ChatScreen extends Component {
     }
 
     componentDidMount() {
-        console.log(this.props.me);
+        if (this.messages) {
+            this.messages.addEventListener('scroll', this._scrollListener);
+        }
     }
 
     componentWillUnmount() {
         this.props.conn.send(this.props.myid + ' in app');
+        window.removeEventListener('scroll', this._scrollListener, false);        
         this.props.refresh();
     }
 
     _bootstrapAsync = async () => {
         let chat = await this.props.chat;
+        chat.n = this.state.n;
         if (chat) {
             API('chatid', chat).then((res) => {
-                console.log(res);
                 if (res.data) {
-                    console.log('2');
-                    res.data.map((msg, i) => {
-                        this.state.dataSource.push(msg);
-                        return true;
-                    })
+                    this.setState({dataSource: res.data})
                 }
             }).then(() => {
+                this.setState({n: this.state.n + 20});
                 this.setState({updated: false});
-                console.log(this.state.dataSource);
-                this.props.conn.send(this.props.myid + ' in chat');    
+                this.props.conn.send(this.props.myid + ' in chat');
+                setTimeout(() => this.setState({scrollEnabled: true}), 400);
                 setTimeout(() => {if (this.messages && this.messages.lastChild) {this.messages.lastChild.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"})}}, 150);      
             });
         }
         
+    }
+
+    _scrollListener = () => {
+        console.log(this.messages.scrollTop);
+        if (this.state.scrollEnabled && this.messages.scrollTop <= 100) {
+        // if (this.messages.scrollTop + this.messages.clientHeight >= this.messages.scrollHeight) {
+            this._onScroll();
+        }
+    }
+
+    _onScroll = async () => {
+        this.setState({scrollEnabled: false});
+        let chat = await this.props.chat;
+        chat.n = this.state.n;
+        API('chatid', chat).then((res) => {
+            if (res.data) {
+                res.data.map((msg, i) => {
+                    this.state.dataSource.push(msg);
+                    return true;
+                })
+            }
+        }).then(() => {
+            this.setState({updated: true});
+            this.setState({n: this.state.n + 20});
+            setTimeout(() => this.setState({scrollEnabled: true}), 100);
+            
+        });
     }
 
     _update = async () => {
@@ -156,7 +189,7 @@ class ChatScreen extends Component {
             API('dispatch', message).then((res) => {
                 if (res.ok) {
                     this.props.conn.send(JSON.stringify(message));
-                    this.state.dataSource.push({
+                    this.state.dataSource.unshift({
                         chat: this.props.chat.id,
                         body: this.state.body,
                         sender: this.props.myid,
@@ -167,7 +200,7 @@ class ChatScreen extends Component {
                 }
             }).then(() => {
                 this.setState({body: ''});
-                this.messages.lastChild.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+                this.messages.firstChild.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
             });
         }
     }
@@ -192,7 +225,8 @@ class ChatScreen extends Component {
         if (this.state.dataSource) {
             let prev = 0;
             Messages = this.state.dataSource.map((msg, i) => {
-                if (msg.sender === prev) {
+                if (this.state.dataSource[i + 1] && ((this.state.dataSource[i + 1].sender === prev) || 
+                    this.state.dataSource[i + 1].sender === msg.sender)) {
                     return <MessageGroup key={ i } msg={ msg } myid={ this.props.myid } chat={ this.props.chat } />    
                 } else {
                     prev = msg.sender;
@@ -204,11 +238,8 @@ class ChatScreen extends Component {
         return (
             <div className='profile-info-full chat messages'>
                 <div className='messages-map' ref={(ref) => this.messages = ref}>
-              
-                        { Messages }
-                        { this.state.typing && <TypingIndicator /> }
-                   
-                    
+                    { this.state.typing && <TypingIndicator /> }
+                    { Messages }   
                 </div>
                 <div>
                     <div className='message-input'>
@@ -322,10 +353,9 @@ class Chats extends Component {
 
     _openChat = (chat) => {
         if (chat.id === -42) {
-            console.warn(chat);
             this._setChatId(chat); 
         }
-        if (chat === 0) {
+        else if (chat === 0) {
             this.setState({chatOpen: false});
             setTimeout(() => this.setState({chat: false}), 300);
         } else {
@@ -351,7 +381,7 @@ class Chats extends Component {
 
         return (
             <div>
-                <div id="user-panel" style={{height: this.props.locked ? 'calc(100vh - 190px)' : 550 + 'px'}}>
+                <div id="user-panel" style={{height: this.props.locked ? 'calc(100vh - 190px)' : 550 + 'px', overflowY: !this.state.chat ? 'scroll' : 'hidden'}}>
                     <div className='profile-info'>
                         <div className='profile-info-full top'>
                             {!this.state.chatOpen ? <h2>Chats</h2> : <div><p onClick={() => this._openChat(0)} className='chat-back'>return</p><h2 style={{textAlign: 'right'}}>{ this.state.chat.name }</h2></div>}
@@ -361,7 +391,9 @@ class Chats extends Component {
                                 {this.state.Matches[0] && <div className='matches-preview'>
                                     { Matches }
                                 </div> }
-                                { Chats }
+                                <div className="chats-preview">
+                                    { Chats }
+                                </div>
                             </div>
                             <div className='chat-body' style={{height: this.props.locked ? 'calc(100vh - 275px)' : 465 + 'px', left: this.state.chatOpen ? 0 + '%' : 110 + '%'}}>
                                 {this.state.chat && <ChatScreen locked={ this.props.locked } chat={ this.state.chat } myid={ this.state.id } conn={this.props.conn} me={ this.state.me } refresh={this._bootstrapAsync} />}
