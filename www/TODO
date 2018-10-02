@@ -4,3 +4,4 @@
 4. restorePassword -> email, dob
 5. registration -> email, login, gender, seeking, dob -> send confirmation email
 6. tokenConfirm -> email, token -> true/false
+7. sendEmail -> id, type (like, unlike, match, block, message, token)
