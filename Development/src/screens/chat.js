@@ -10,6 +10,14 @@ const TypingIndicator = (props) => {
     );
 }
 
+const MessageIndicator = (props) => {
+    return (
+        <div className='message-indicator'>
+            <i className="fas fa-chevron-circle-down" style={{color: props.color ? '#cc2222' : '#aaa'}} onClick={() => props.scroll()}></i>
+        </div>
+    );
+}
+
 const MessageGroup = (props) => {
     if (props.msg.sender === props.myid) {
         return (
@@ -37,7 +45,7 @@ const MessageBubble = (props) => {
         return (
             <div className='message-bubble'>
                 <div className='bubble-cnt sent'>
-                    <img className='message-avatar sent' src={ props.chat.avatar } alt='' />
+                    <img className='message-avatar sent' src={ props.myavatar } alt='' />
                     <p className='message-body sent'>{ props.msg.body }</p>
                     <p className='message-time sent'>{timestamp[0] + ':' + timestamp[1]}</p>
                 </div>
@@ -66,6 +74,8 @@ class ChatScreen extends Component {
             me: false, 
             audio: true,
             typing: false,
+            newMessage: false,
+            scrollbottom: false,
             n: 0,
         }
         this._bootstrapAsync();
@@ -93,11 +103,24 @@ class ChatScreen extends Component {
                 this.setState({updated: true});
                 if (this.messages && this.messages.lastChild) {
                     // this.messages.scrollTo(0, 0);
-                    this.messages.firstChild.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+                    if (this.messages && this.messages.scrollHeight - this.messages.scrollTop > 500) {
+                        this.setState({newMessage: true});
+                    } else {
+                        this._scrollBottom();
+                    }
                 }             
                 if (this.state.audio) { this.audio.play() }
             }
         }
+    }
+
+    _scrollBottom = () => {
+        this.setState({
+            newMessage: false,
+            scrollbottom: false,            
+        });
+        // this.messages.firstChild.scrollIntoView({behavior: "instant", block: "end", inline: "nearest"});
+        this.messages.scrollTop += this.messages.scrollHeight;
     }
 
     async componentDidUpdate() {
@@ -120,6 +143,7 @@ class ChatScreen extends Component {
         this.props.conn.send(this.props.myid + ' in app');
         window.removeEventListener('scroll', this._scrollListener, false);        
         this.props.refresh();
+        this.props.sockets();
     }
 
     _bootstrapAsync = async () => {
@@ -141,7 +165,9 @@ class ChatScreen extends Component {
     }
 
     _scrollListener = () => {
-        console.log(this.messages.scrollTop);
+        if (this.messages && this.messages.scrollHeight - this.messages.scrollTop > 500) {
+            this.setState({scrollbottom: true})
+        }
         if (this.state.scrollEnabled && this.messages.scrollTop <= 100) {
         // if (this.messages.scrollTop + this.messages.clientHeight >= this.messages.scrollHeight) {
             this._onScroll();
@@ -208,7 +234,9 @@ class ChatScreen extends Component {
                 }
             }).then(() => {
                 this.setState({body: ''});
-                this.messages.firstChild.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+                if (this.messages && this.messages.firstChild ) {
+                    this._scrollBottom();
+                }
             });
         }
     }
@@ -233,14 +261,12 @@ class ChatScreen extends Component {
         if (this.state.dataSource) {
             let prev = 0;
             Messages = this.state.dataSource.map((msg, i) => {
-                if (this.state.dataSource[i + 1] && ((this.state.dataSource[i + 1].sender === prev) || 
-                    this.state.dataSource[i + 1].sender === msg.sender)) {
-                    return <MessageGroup key={ i } msg={ msg } myid={ this.props.myid } chat={ this.props.chat } />    
-                } else if (this.state.dataSource[i - 1] && (this.state.dataSource[i - 1].sender !== prev)) {
-                    return <MessageBubble key={ i } msg={ msg } myid={ this.props.myid } chat={ this.props.chat } />
+                if (msg.sender === prev) {
+                    
+                    return <MessageGroup key={ i } msg={ msg } myid={ this.props.myid } chat={ this.props.chat }/>
                 } else {
                     prev = msg.sender;
-                    return <MessageBubble key={ i } msg={ msg } myid={ this.props.myid } chat={ this.props.chat } />
+                    return <MessageBubble key={ i } msg={ msg } myid={ this.props.myid } chat={ this.props.chat }  myavatar={this.state.me.avatar} />
                 }
             })
         }
@@ -248,8 +274,9 @@ class ChatScreen extends Component {
         return (
             <div className='profile-info-full chat messages'>
                 <div className='messages-map' ref={(ref) => this.messages = ref}>
+                    {this.state.scrollbottom && <MessageIndicator color={this.state.newMessage} scroll={this._scrollBottom} />}
                     { this.state.typing && <TypingIndicator /> }
-                    { Messages }   
+                    { Messages }
                 </div>
                 <div>
                     <div className='message-input'>
@@ -336,6 +363,7 @@ class Chats extends Component {
 
     componentWillUnmount() {
         this.props.clear();
+        this.props.sockets();
     }
 
     _setChatId = (chat) => {
@@ -357,7 +385,6 @@ class Chats extends Component {
         }).then(() => {
             this.setState({chat: chat});
             setTimeout(() => this.setState({chatOpen: true}), 100);
-            console.log(this.state.chat);
         })
     }
 
@@ -406,7 +433,7 @@ class Chats extends Component {
                                 </div>
                             </div>
                             <div className='chat-body' style={{height: this.props.locked ? 'calc(100vh - 275px)' : 465 + 'px', left: this.state.chatOpen ? 0 + '%' : 110 + '%'}}>
-                                {this.state.chat && <ChatScreen locked={ this.props.locked } chat={ this.state.chat } myid={ this.state.id } conn={this.props.conn} me={ this.state.me } refresh={this._bootstrapAsync} />}
+                                {this.state.chat && <ChatScreen locked={ this.props.locked } chat={ this.state.chat } myid={ this.state.id } conn={this.props.conn} me={ this.state.me } refresh={this._bootstrapAsync} sockets={this.props.sockets} />}
                             </div>
                         </div>
                     </div>

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import API, { GEO } from '../backyard/api';
-import { TagBubble } from '../const/bubbles';
+import { TagBubble, TagBubbleConst, PictureThumb } from '../const/bubbles';
 
 
 
@@ -11,6 +11,8 @@ class ProfilePreview extends Component {
             id: false,
             info: false,
             city: false,
+            liked: false,
+            matched: false,
         }
         this._bootstrapAsync();
     }
@@ -26,8 +28,8 @@ class ProfilePreview extends Component {
         }
     }
 
-    _push(type) {
-        let message = {
+    async _push(type) {
+        let message = await {
             myid: this.props.me.id,
             body: type,
             mate: this.props.info.id,
@@ -39,6 +41,19 @@ class ProfilePreview extends Component {
 
     componentDidMount() {
         this._push('Checked you out!');
+        API('likeNmatch', {
+            myid: this.props.me.id,
+            mate: this.props.info.id,
+        }).then((res) => {
+            if (res.data) {
+                if (res.data.liked) {
+                    this.setState({liked: true});
+                }
+                if (res.data.matched) {
+                    this.setState({matched: true});
+                }
+            }
+        });
     }
 
     _getAge(d) {
@@ -50,7 +65,7 @@ class ProfilePreview extends Component {
 
     _like = () => {
         API('like', {
-            myid: this.props.myid,
+            myid: this.props.me.id,
             mate: this.props.info.id,
         }).then((res) => {
             if (res.ok) {
@@ -59,7 +74,7 @@ class ProfilePreview extends Component {
                     this._push("You have a match!");
                 } else {
                     this.setState({liked: true});
-                    this._push('Liked out!');
+                    this._push('Liked you!');
                 }
             } else if (!res.ok) {
                 alert('Oops, error on the server side. Please, try again later');
@@ -109,6 +124,21 @@ class ProfilePreview extends Component {
                 </div>
             )
         } else {
+            let Tags = null;
+            let Pictures = null;
+            if (this.props.info.tags) {
+                let array = this.props.info.tags.split(' ');
+                Tags = array.map((tag, i) => {
+                    return <TagBubbleConst text={tag} key={ i } delete={this._deleteTag} />
+                })
+            }
+    
+            if (this.props.info.pictures) {
+                let array = this.props.info.pictures.split(' ');
+                Pictures = array.map((pic, i) => {
+                    return <PictureThumb pic={ pic } all={ array } key={ i } n={ i } open={ this.props.openImg } my={ false } />
+                })
+            }
             return (
                 <div>
                     <div id="user-preview">
@@ -118,6 +148,11 @@ class ProfilePreview extends Component {
                         <p className="counter likes">253</p>
                         <p className="info posts">Matches</p>
                         <p className="counter posts">121</p> */}
+                        <div className='profile-info-half pictures-half' style={{marginTop: 10 + 'px'}}>
+                            <div className='picture-thumb'>
+                                { Pictures }
+                            </div>
+                        </div>
                         <div className='profile-info-wide'>
                             <div className='profile-info-full top'>
                                 <h2>{ this.props.info.first_name } { this.props.info.last_name }</h2>
@@ -133,13 +168,20 @@ class ProfilePreview extends Component {
                             </div>
                             <div className='profile-info-full'>
                                 <label>Interested in:</label>
-                                <p>{ this.props.info.tags }</p>
+                                <div className='tags-cnt'>
+                                    { Tags }
+                                </div>
                             </div>
-                        
+                            <div className='profile-info-full' style={{marginTop: 10 + 'px'}}>
+                                <label>About me:</label>
+                                <p max='100' >{ this.props.info.about }</p>
+                            </div>
+                            
                         </div>
+                    
                         <div className='profile-info-full bottom'>
-                            <i className="far fa-check-circle green" onClick={this._like}></i>
-                            <i className={ this.state.match ? "far fa-comment blue" : "far fa-comment" }></i>
+                            <i className={ this.state.liked ? "far fa-check-circle green" : "far fa-check-circle" } onClick={this._like}></i>
+                            <i className={ this.state.matched ? "far fa-comment blue" : "far fa-comment" }></i>
                             <i className="far fa-times-circle red" onClick={this._block}></i>
                         </div>
                         {/* <a onclick="return logMeOut();"><p className="logout" id="logout_d">Log out</p></a> */}
@@ -297,7 +339,6 @@ export default class Browser extends Component {
     }
 
     _showPreview = (id) => {
-        console.log(id);
         this._searchId(id);
     }
     
@@ -358,7 +399,7 @@ export default class Browser extends Component {
         return (
             <div ref={(ref) => this.users = ref} style={{transition: '300ms', display: 'flex', flexDirection: 'row', width: this.props.size ? 'calc(100vw - 350px)' : 100 + 'vw', height: 95 + 'vh', flexWrap: 'wrap', justifyContent: 'flex-start', overflowY: 'scroll', paddingTop: 15 + 'px'}}>
                 { this.state.preview >= 0 && <div className='profile-preview-cnt'><div style={{position: 'absolute', height: 100 + '%', width: 100 + '%'}}  onClick={this._hidePreview} />
-                    <ProfilePreview info={this.state.dataSource[this.state.preview]} hide={this._hidePreview} myid={this.state.myid} me={this.props.me} refresh={this._bootstrapAsync} conn={this.props.conn} />
+                    <ProfilePreview info={this.state.dataSource[this.state.preview]} hide={this._hidePreview} myid={this.state.myid} me={this.props.me} refresh={this._bootstrapAsync} conn={this.props.conn} openImg={ this.props.openImg } />
                 </div> }
                 <div className='search-bubble' style={{top: this.state.searchBubble ? 100 + 'px' : 0 + 'px'}} onClick={this._toggleSearch}>
                     <p>Search Filter</p>
@@ -404,7 +445,7 @@ export default class Browser extends Component {
                             </div>
                         </div>
                     </div>
-                    <p className='apply' onClick={this._bootstrapAsync}>Apply</p>
+                    <p className='apply' onClick={() => {this._bootstrapAsync(); this._toggleSearch()}}>Apply</p>
                 </div>
                 { Content }
             </div>

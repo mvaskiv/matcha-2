@@ -43,7 +43,6 @@ class LoginForm extends Component {
   
     _logIn = () => {
       API('login', this.state).then((res) => {
-        console.log(res);
         if (res.ok) {
           sessionStorage.setItem('user_data', JSON.stringify(res.data));
           localStorage.setItem('user_data', JSON.stringify(res.data));

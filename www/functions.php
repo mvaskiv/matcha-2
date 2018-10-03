@@ -63,6 +63,37 @@ function geoSort($post) {
     ));
 }
 
+function likeNmatch($post) {
+    $stmt = $GLOBALS['conn']->prepare(
+        "SELECT likes.id AS liked, matches.id AS matched FROM likes 
+        LEFT JOIN matches ON matches.first = ? AND matches.second = ? 
+        OR matches.second = ? AND matches.first = ? WHERE likes.from = ? 
+        AND likes.to = ?"
+    );
+    $stmt->execute([
+        $post['myid'],
+        $post['mate'],
+        $post['myid'],
+        $post['mate'],
+        $post['myid'],
+        $post['mate']
+    ]);
+    $result = $stmt->fetch();
+    if ($result) {
+        return json_encode(array(
+            'data' => $result,
+            'ok' => true,
+            'query' => $stmt
+        ));
+    } else {
+        return json_encode(array(
+            'ok' => false,
+            'query' => $stmt,
+            'post' => $post
+        ));
+    }
+}
+
 function getBlacklist($post) {
     $stmt = $GLOBALS['conn']->prepare(
         "SELECT * FROM `blacklist` WHERE user = " . $post['myid'] . ";"
@@ -327,12 +358,108 @@ function matches($post) {
     if ($result) {
         return json_encode(array(
             'data' => $result,
-            'query' => $stmt,
             'ok' => true,
         ));
     } else {
         return json_encode(array(
             'ok' => false,
+        ));
+    }
+}
+
+
+function getImages($post) {
+    $stmt= $GLOBALS['conn']->prepare(
+        "SELECT pictures, avatar FROM `users` WHERE `id` = ? ;"
+    );
+    $stmt->execute([
+        $post['id'],
+    ]);
+    $res = $stmt->fetch();
+    if ($res) {
+        return json_encode(array(
+            'avatar' => $res['avatar'],
+            'data' => $res['pictures'],
+            'ok' => true
+        ));
+    } else {
+        return json_encode(array(
+            'ok' => false
+        ));
+    }
+}
+
+function imgUpload($post) {
+    $arr = explode(',', $post['picture']);
+    $data = base64_decode($arr[1]);
+    $rand = rand(0, 99999);
+    while (file_exists("./pictures/" . $rand . ".png")) {$rand = rand(0, 99999);}
+    $fd = fopen("./pictures/" . $rand . ".png", 'w+') or die("Unable to open file!");
+    fwrite($fd, $data);
+    fclose($fd);
+    $stmt = $GLOBALS['conn']->prepare(
+        "SELECT pictures FROM `users` WHERE `id` = ? ;"
+    );
+    $stmt->execute([
+        $post['id'],
+    ]);
+    $result = $stmt->fetch();
+    if ($result[0]) {
+       $string = trim($result[0]) . ' ' . '/pictures/' . $rand . '.png';
+    }
+    $stmt_one = $GLOBALS['conn']->prepare(
+        "UPDATE `users` SET pictures = ? WHERE `id` = ? ;"
+    );
+    $res = $stmt_one->execute([
+        $string,
+        $post['id'],
+    ]);
+    if ($res) {
+        return json_encode(array(
+            'data' => '/pictures/' . $rand . '.png',
+            'ok' => true
+        ));
+    } else {
+        return json_encode(array(
+            'ok' => false
+        ));
+    }
+}
+
+function imgDelete($post) {
+    $stmt= $GLOBALS['conn']->prepare(
+        "UPDATE `users` SET pictures = ? WHERE `id` = ? ;"
+    );
+    $res = $stmt->execute([
+        $post['pictures'],
+        $post['id'],
+    ]);
+    if ($res) {
+        return json_encode(array(
+            'ok' => true
+        ));
+    } else {
+        return json_encode(array(
+            'ok' => false
+        ));
+    }
+}
+
+function updateProfilePic($post) {
+    $stmt= $GLOBALS['conn']->prepare(
+        "UPDATE `users` SET avatar = ? WHERE `id` = ? ;"
+    );
+    $res = $stmt->execute([
+        $post['avatar'],
+        $post['id'],
+    ]);
+    if ($res) {
+        return json_encode(array(
+            'ok' => true
+        ));
+    } else {
+        return json_encode(array(
+            'ok' => false
         ));
     }
 }

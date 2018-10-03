@@ -20,6 +20,11 @@ $methods = array(
     'block' => 'block',
     'unblock' => 'unblock',
     'matches' => 'matches',
+    'likeNmatch' => 'likeNmatch',
+    'getImages' => 'getImages',
+    'imgUpload' => 'imgUpload',
+    'imgDelete' => 'imgDelete',
+    'updateProfilePic' => 'updateProfilePic',
 );
 
 $function = $post['method'];

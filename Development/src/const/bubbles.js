@@ -25,3 +25,14 @@ export const TagBubbleConst = (props) => {
     }
 }
 
+export const PictureThumb = (props) => {
+    if (props.add) {
+        return (
+            <img alt='' src={require('../img/plus.jpg')} onClick={props.add} />
+        )  
+    } else {
+        return (
+            <img alt='' src={props.pic} onClick={() => props.open(props.all, props.n, props.my ? 1 : 0)} />
+        )
+    }
+}
