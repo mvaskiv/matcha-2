@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 
 export const TagBubble = (props) => {
     if (props.text !== '') {
@@ -34,5 +34,36 @@ export const PictureThumb = (props) => {
         return (
             <img alt='' src={props.pic} onClick={() => props.open(props.all, props.n, props.my ? 1 : 0)} />
         )
+    }
+}
+
+export const PersonBubbleMap = (props) => {
+    if (!props.bl.includes(props.info.id) && props.x && props.y) {
+        return (
+            <div className='bubble-sm'
+                style={{position: 'absolute', top: props.x, left: props.y}}>
+                <img className='bubble-img-sm'
+                    src={props.info.avatar ? props.info.avatar : require('../img/avatar.png')}
+                    alt='' onClick={() => props.preview(props.info.id)}
+                    style={{width: props.me ? 120 + 'px' : 70 + 'px'}}/>
+                {/* {!props.me && <p>{ Math.round(props.info.distance) } km away</p>} */}
+            </div>
+        )
+    } else {
+        return null;
+    }
+}
+
+export const PersonBubble = (props) => {
+    if (!props.bl.includes(props.info.id)) {
+        return (
+            <div className='bubble'>
+                <img className='bubble-img' src={props.info.avatar ? props.info.avatar : require('../img/avatar.png')} alt='' onClick={() => props.preview(props.info.id)} />
+                <h3>{props.info.first_name}</h3>
+                <p>{ Math.round(props.info.distance) } km away</p>
+            </div>
+        )
+    } else {
+        return null;
     }
 }

@@ -12,7 +12,7 @@ const TypingIndicator = (props) => {
 
 const MessageIndicator = (props) => {
     return (
-        <div className='message-indicator'>
+        <div className='message-indicator' style={{bottom: props.typing ? 68 + 'px' : 35 + 'px'}}>
             <i className="fas fa-chevron-circle-down" style={{color: props.color ? '#cc2222' : '#aaa'}} onClick={() => props.scroll()}></i>
         </div>
     );
@@ -274,7 +274,7 @@ class ChatScreen extends Component {
         return (
             <div className='profile-info-full chat messages'>
                 <div className='messages-map' ref={(ref) => this.messages = ref}>
-                    {this.state.scrollbottom && <MessageIndicator color={this.state.newMessage} scroll={this._scrollBottom} />}
+                    {this.state.scrollbottom && <MessageIndicator color={this.state.newMessage} scroll={this._scrollBottom} typing={this.state.typing} />}
                     { this.state.typing && <TypingIndicator /> }
                     { Messages }
                 </div>

@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import API, { GEO } from '../backyard/api';
+import API from '../backyard/api';
 import Browser from './browser';
 import Chats from './chat';
+import BrowserMap from './mapview';
 
 import { TagBubbleConst, PictureThumb } from '../const/bubbles';
 
@@ -133,7 +134,7 @@ class Profile extends Component {
                     <p className="counter likes">253</p>
                     <p className="info posts">Matches</p>
                     <p className="counter posts">121</p> */}
-                    <div className='profile-info'>
+                    <div className='profile-info me'>
                         <div className='profile-info-full top'>
                             <h2>{ this.state.info.first_name }</h2>
                             <p>{this.state.changeProfilePic ? 'To update your profile picture, select it from the ones available below. Or use the pluss button to upload something new.' : this.state.city + ', ' + this._getAge(this.state.info.dob) + ' y.o.'}</p>
@@ -197,7 +198,7 @@ class Settings extends Component {
         return (
             <div>
                 <div id="user-panel">
-                    <div className='profile-info'>
+                    <div className='profile-info me'>
                         <div className='profile-info-full top settings'>
                             <h2>Settings</h2>
                         </div>
@@ -301,8 +302,10 @@ class Home extends Component {
         if (!this.state.popup) {
             this.setState({popup: true});
         } else {
-            this.setState({popup: false});
-            this.setState({lockMenu: false});
+            this.setState({
+                popup: false,
+                lockMenu: false,
+            });
         }
     }
 
@@ -376,8 +379,8 @@ class Home extends Component {
         <div className="App">
           <header className="header">
             {/* <i class="far fa-envelope messages-icon"></i> */}
-            <div className="menu mobhide" style={{width: this.state.menu ? 400 + 'px' : 50 + 'px'}}>
-                <img src={require('../img/menu.png')} className="menu-btn" alt="logo" onClick={() => this.setState({menu: !this.state.menu})} />
+            <div className="menu mobhide" style={{width: this.state.menu ? 100 + 'vw' : 50 + 'px'}}>
+                <img src={require('../img/menu.png')} className="menu-btn" alt="logo" onClick={() => this.setState({popup: false, menu: !this.state.menu})} />
                 <p onClick={() => this._getMenuItem(3)}>Settings</p>
                 <p onClick={() => this._getMenuItem(2)}>Profile</p>
                 <p onClick={() => this._getMenuItem(1)}>Chats</p>
@@ -389,7 +392,7 @@ class Home extends Component {
             <PopUp shown={this.state.popup} toggle={this._togglePopup} display={this.state.display} lock={this._lockMenu} locked={this.state.lockMenu} conn={this.conn} n_open={this.state.n_open} clear={this._clearNotification} openImg={this._openImageView} sockets={this._socketInit} />
             <div className='main-view'>
                 {this.state.myid && <Browser myid={this.state.myid} size={ this.state.lockMenu } me={this.state.me} conn={this.conn} openImg={this._openImageView} />}
-                <div className='notification-container'>
+                <div className='notification-container' style={{right: this.state.lockMenu ? 350 + 'px' : 0}}>
                     { Notifications }
                 </div>
             </div>

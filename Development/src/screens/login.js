@@ -15,12 +15,27 @@ class RegisterForm extends Component {
   
     render() {
       return (
-        <div>
+        <div className='mob-scroll'>
           <div className="login-form">
             <h2>Register</h2>
-            <input type='text' className='form-input' />
-            <input type='text' className='form-input' />
-            <input type='text' className='form-input' />
+            <input type='text' className='form-input' placeholder='Login (optional)' />
+            <label>Email:</label>
+            <input type='text' className='form-input' placeholder='john@doe.com'/>
+            <label>Date of Birth:</label>
+            <input type='date' className='form-input' placeholder='Date of Birth'/>
+            <label>Gender:</label>
+            <div className='signup-sex'>
+              <p onClick={() => this.setState({gender: 'm'})} className='third' style={{color: this.state.gender === 'm' ? '#e39' : '#999'}}>Male</p>
+              <p>|</p>
+              <p onClick={() => this.setState({gender: 'f'})} className='third'style={{color: this.state.gender === 'f' ? '#e39' : '#999'}}>Female</p>
+            </div>
+            <label>Sexuality:</label>
+            <div className='signup-sex'>
+              <p onClick={() => this.setState({gender: 'm'})} className='third' style={{color: this.state.gender === 'm' ? '#e39' : '#999'}}>Straight</p>
+              <p onClick={() => this.setState({gender: 'f'})} className='third'style={{color: this.state.gender === 'f' ? '#e39' : '#999'}}>Gay</p>
+              <p onClick={() => this.setState({gender: 'b'})} className='third'style={{color: this.state.gender === 'b' ? '#e39' : '#999'}}>Bisexual</p>
+            </div>
+            <h3 className="sign" onClick={this._logIn}>Sign Up</h3>
           </div>
           <div className="login-msg">
             <h2 className="cancel-lg" onClick={this.props.close}>Cancel</h2>
