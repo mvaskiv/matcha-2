@@ -1,5 +1,13 @@
 <?php 
 
+function addAffection($n, $id) {
+    $stmt = $GLOBALS['conn']->prepare(
+        "UPDATE users SET fame = fame + ? WHERE id = ?;"
+    );
+    $stmt->execute([$n, $id]);
+}
+
+
 function getUsers($post) {
     $stmt = $GLOBALS['conn']->prepare(
         "SELECT * FROM `users` LIMIT " . $post['n'] . ", 35;"
@@ -79,17 +87,14 @@ function likeNmatch($post) {
         $post['mate']
     ]);
     $result = $stmt->fetch();
+    addAffection(1, $post['myid']);
     if ($result) {
         return json_encode(array(
-            'data' => $result,
             'ok' => true,
-            'query' => $stmt
         ));
     } else {
         return json_encode(array(
             'ok' => false,
-            'query' => $stmt,
-            'post' => $post
         ));
     }
 }
@@ -112,6 +117,7 @@ function login($post) {
     );
     $stmt->execute();
     $result = $stmt->fetch();
+    addAffection(10, $result['id']);
     if ($result) {
         return json_encode(array(
             'data' => $result,
@@ -237,6 +243,7 @@ function chat_update($post) {
         $post['id'],
         $post['timestamp'],
     ]);
+    addAffection(1, $post['id']);
     $result = $stmt->fetchAll();
     if ($result) {
         return json_encode(array(
@@ -259,6 +266,7 @@ function like($post) {
         $post['mate'],
     ]);
     $pass = $checkone->fetch();
+    addAffection(2, $post['myid']);
     if (!$pass) {
         $stmt = $GLOBALS['conn']->prepare(
             "INSERT INTO `likes` (`from`, `to`) values (?, ?);"
@@ -303,6 +311,36 @@ function like($post) {
     }
 }
 
+
+function unlike($post) {
+    $stmt = $GLOBALS['conn']->prepare(
+        "DELETE FROM `likes` WHERE `from` = ? AND `to` = ?;"
+    );
+    $stmt->execute([
+        $post['myid'],
+        $post['mate'],
+    ]);
+    $stmt_one = $GLOBALS['conn']->prepare(
+        "DELETE FROM `matches` WHERE `first` = ? AND `second` = ? OR `first` = ? AND `second` = ?;"
+    );
+    $stmt_one->execute([
+        $post['myid'],
+        $post['mate'],
+        $post['mate'],
+        $post['myid'],
+    ]);
+    addAffection(-3, $post['myid']);
+    if ($stmt) {
+        return json_encode(array(
+            'ok' => true,
+        ));
+    } else {
+        return json_encode(array(
+            'ok' => false,
+        ));
+    }
+}
+
 function block($post) {
     $stmt = $GLOBALS['conn']->prepare(
         "INSERT INTO `blacklist` (user, listed) values (?, ?);"
@@ -330,6 +368,7 @@ function unblock($post) {
         $post['myid'],
         $post['mate'],
     ]);
+    addAffection(3, $post['myid']);
     if ($stmt) {
         return json_encode(array(
             'ok' => true,
@@ -414,6 +453,7 @@ function imgUpload($post) {
         $string,
         $post['id'],
     ]);
+    addAffection(5, $post['id']);
     if ($res) {
         return json_encode(array(
             'data' => '/pictures/' . $rand . '.png',
@@ -433,7 +473,8 @@ function imgDelete($post) {
     $res = $stmt->execute([
         $post['pictures'],
         $post['id'],
-    ]);
+    ]);    
+    addAffection(-5, $post['id']);
     if ($res) {
         return json_encode(array(
             'ok' => true

@@ -64,6 +64,12 @@
     background-color: #fff;
 }
 
+.fame {
+    position: absolute;
+    top: 275px;
+    left: 105px;
+}
+
 .paper-clip {
     position: absolute;
     width: 100px;
@@ -293,8 +299,7 @@ p.counter.posts {
 .profile-info-full.bottom i {
     font-size: 3em;
     width: 50px;
-    margin-left: 93px;
-    margin-right: 93px;
+    margin: auto;
     /* flex-grow: 1; */
     color: #aaa;
     cursor: pointer;
@@ -1529,9 +1534,9 @@ p.counter.posts {
     .profile-info-wide {
         padding: 0;
         left: 2%;
-        top: 190px;
+        top: 210px;
         width: 98%!important;
-        height: 55%;
+        height: 52%;
         overflow-y: scroll;
     }
 
@@ -1568,7 +1573,7 @@ p.counter.posts {
     }
 
     .profile-info-full.bottom {
-        bottom: 10px;
+        bottom: 7px;
         width: 100%!important;
     }
 
@@ -1581,6 +1586,11 @@ p.counter.posts {
         /* flex-grow: 1; */
         color: #aaa;
         cursor: pointer;
+    }
+
+    .fame {
+        top: 175px;
+        left: 65px;
     }
 
 

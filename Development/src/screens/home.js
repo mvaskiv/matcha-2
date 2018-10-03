@@ -330,6 +330,7 @@ class Home extends Component {
         this.setState({display: 1});
         this.setState({popup: true});
         this.setState({n_open: chat});
+        this._clearAllNotifications();
     }
 
     _clearNotification = () => {

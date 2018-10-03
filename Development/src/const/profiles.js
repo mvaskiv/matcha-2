@@ -17,14 +17,6 @@ export class ProfilePreview extends Component {
 
     _bootstrapAsync = async () => {
         this.state.id = await this.props.info.id;
-
-
-
-        // let a = await this._mercator(this.props.info.latitude, this.props.info.longitude);
-
-        // let x = await ( 6371 * Math.cos(this.props.info.latitude) * Math.cos(this.props.info.longitude));
-        // let y = await ( 6371 * Math.cos(this.props.info.latitude) * Math.sin(this.props.info.longitude));
-        // this.setState({city: 'x: ' + a.x + ', y: ' + a.y});
         GEO({lat: this.props.info.latitude, lon: this.props.info.longitude}).then((res) => this.setState({city: res}));
     }
 
@@ -70,10 +62,11 @@ export class ProfilePreview extends Component {
     }
 
     _like = () => {
-        API('like', {
+        let post = {
             myid: this.props.me.id,
             mate: this.props.info.id,
-        }).then((res) => {
+        };
+        API('like', post).then((res) => {
             if (res.ok) {
                 if (res.ok === 'match') {
                     alert('Congratulation, you liked each other and can now chat with ' + this.props.info.first_name);
@@ -81,6 +74,13 @@ export class ProfilePreview extends Component {
                 } else if (res.ok !== 'duplicate') {
                     this.setState({liked: true});
                     this._push('Liked you!');
+                } else if (res.ok === 'duplicate') {
+                    API('unlike', post).then((res) => {
+                        if (res.ok) {
+                            alert('You unliked ' + this.props.info.first_name);
+                            this._push('Uniked you!');
+                        }
+                    });
                 }
             } else if (!res.ok) {
                 alert('Oops, error on the server side. Please, try again later');
@@ -149,6 +149,7 @@ export class ProfilePreview extends Component {
                 <div>
                     <div id="user-preview">
                         <img className='paper-clip' src={require('../img/clip.png')} alt='' />
+                        <p className='fame'>Fame: {this.props.info.fame}</p>
                         <img id="user-avatar-lg" src={this.props.info.avatar ? this.props.info.avatar : require('../img/avatar.png')} alt='' />
                         {/* <p className="info likes">Affection</p>
                         <p className="counter likes">253</p>
@@ -187,7 +188,7 @@ export class ProfilePreview extends Component {
                     
                         <div className='profile-info-full bottom'>
                             <i className={ this.state.liked ? "far fa-check-circle green" : "far fa-check-circle" } onClick={this._like}></i>
-                            <i className={ this.state.matched ? "far fa-comment blue" : "far fa-comment" }></i>
+                            {/* <i className={ this.state.matched ? "far fa-comment blue" : "far fa-comment" }></i> */}
                             <i className="far fa-times-circle red" onClick={this._block}></i>
                         </div>
                         {/* <a onclick="return logMeOut();"><p className="logout" id="logout_d">Log out</p></a> */}

@@ -17,6 +17,7 @@ $methods = array(
     'chat_init' => 'chat_init',
     'chat_update' => 'chat_update',
     'like' => 'like',
+    'unlike' => 'unlike',
     'block' => 'block',
     'unblock' => 'unblock',
     'matches' => 'matches',
