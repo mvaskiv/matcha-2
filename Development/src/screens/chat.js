@@ -165,7 +165,9 @@ class ChatScreen extends Component {
     }
 
     _scrollListener = () => {
-        if (this.messages && this.messages.scrollHeight - this.messages.scrollTop > 500) {
+        if (this.state.scrollbottom && this.messages.scrollHeight - this.messages.scrollTop < 700) {
+            this.setState({scrollbottom: false})
+        } else if (this.messages && this.messages.scrollHeight - this.messages.scrollTop > 700) {
             this.setState({scrollbottom: true})
         }
         if (this.state.scrollEnabled && this.messages.scrollTop <= 100) {

@@ -1593,6 +1593,18 @@ p.counter.posts {
         left: 65px;
     }
 
+    .header h1 { 
+        top: -3px;
+      }
+      
+      .header .fa-kiss-wink-heart {
+        position: absolute;
+        left: 155px;
+        top: 32px;
+        font-size: 20px;
+        color: rgb(179, 31, 31);
+      }
+
 
 
 

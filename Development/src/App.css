@@ -43,6 +43,8 @@ body, html {
   top: 0;
   overflow: hidden;
   transition: 250ms ease-in-out;
+  background-color: #fff;
+  z-index: 1003;
 }
 
 .menu p {
@@ -675,3 +677,159 @@ body, html {
   100% { transform: translateX(0px); }
 }
 
+.settings-cnt {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  transition: all 320ms;
+}
+
+.profile-info-full.top.settings .settings-option {
+  position: relative;
+  top: 20px;
+  margin: 0px;
+  margin-left: 0px;
+  width: 94%;
+  margin-bottom: 10px;
+  padding: 10px;
+  height: 30px;
+  border-top: 0.5px solid #eee;
+  border-bottom: 0.5px solid #eee;
+  background-color: #fbfbfb;
+  transition: all 250ms;
+  cursor: pointer;
+}
+.profile-info-full.top.settings .settings-option:hover {
+  background-color: #f7f7f7;
+  transition: all 250ms;
+}
+.profile-info-full.top.settings .settings-option:active {
+  background-color: #f3f3f3;
+  transition: all 250ms;
+}
+
+.profile-info-full.top.settings .settings-option p {
+  padding-left: 10px;
+  line-height: 0.3em;
+  font-size: 20px;
+  font-weight: 200;
+}
+
+.profile-info-full.top.settings .settings-option .fa-chevron-right {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  color: #aaa;
+  font-size: 20px;
+}
+
+.settings-option-in {
+  position: relative;
+  top: 20px;
+  margin: 0px;
+  margin-left: 0px;
+  width: 94%;
+  margin-bottom: 10px;
+  padding: 10px;
+  height: 30px;
+  border-top: 0.5px solid #eee;
+  border-bottom: 0.5px solid #eee;
+  background-color: #fbfbfb;
+  transition: all 250ms;
+  cursor: pointer;
+}
+
+.settings-option-in p {
+  padding-left: 30px;
+  line-height: 0.2em;
+  font-size: 20px;
+  font-weight: 200;
+}
+
+.profile-info-full.top.settings .settings-option-in .fa-chevron-left {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  color: #aaa;
+  font-size: 20px;
+}
+
+.settings-option-edit {
+  position: relative;
+  top: 20px;
+  margin: 0px;
+  margin-left: 0px;
+  width: 94%;
+  margin-bottom: 10px;
+  padding: 10px;
+  height: 30px;
+  border-top: 0.5px solid #eee;
+  border-bottom: 0.5px solid #eee;
+  background-color: #fbfbfb;
+  transition: all 250ms;
+}
+
+.settings-option-edit p {
+  position: absolute;
+  top: -14px;
+  left: 0;
+  width: 80px;
+  padding-left: 12px;
+  line-height: 50px;
+  font-size: 16px;
+  border-right: 1px solid #ddd;
+  border-block-start: 1;
+  font-weight: 200;
+}
+
+.settings-option-edit input[type=text] {
+  position: relative;
+  float: left;
+  top: 5px;
+  width: 200px;
+  left: 95px;
+  outline-width: 0;
+  color: #444;
+  font-weight: 200;
+  background: transparent;
+  border: none!important;
+  font-size: 16px;
+}
+
+.settings-option-edit.lg {
+  height: 100px!important;
+}
+
+.settings-option-edit.lg p {
+  border: none;
+}
+
+.settings-option-edit.lg textarea {
+  min-height: 80px;
+  max-height: 80px;
+  min-width: 100%;
+  max-width: 100%;
+  top: 25px;
+  left: 0;
+  position: relative;
+  float: left;
+  width: 200px;
+  outline-width: 0;
+  color: #444;
+  font-weight: 200;
+  background: transparent;
+  border: none!important;
+  font-size: 15px;
+}
+
+.save {
+	position: absolute;
+	bottom: -2px;
+	margin-left: auto;
+	margin-right: auto;
+	left: 0;
+	right: 0;
+	text-align: center;
+  cursor: pointer;
+  color: #197fd8;
+}

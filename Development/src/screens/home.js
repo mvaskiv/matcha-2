@@ -178,12 +178,24 @@ class Profile extends Component {
     }
 }
 
+
+
 class Settings extends Component {
     constructor(props) {
         super(props);
         this.state = {
             id: false,
+            edit: false,
+            me: false,
         }
+        this.original = null;
+        this._bootstrapAsync();
+    }
+
+    _bootstrapAsync = async () => {
+        let me = await JSON.parse(localStorage.getItem('user_data'));
+        this.setState({me: me});
+        this.original = me;
     }
 
     _logOut = () => {
@@ -201,9 +213,48 @@ class Settings extends Component {
                     <div className='profile-info me'>
                         <div className='profile-info-full top settings'>
                             <h2>Settings</h2>
+                            <div className='settings-cnt' style={{left: this.state.edit ? -100 + '%' : 0}}>
+                                <div className='settings-option' onClick={() => this.setState({edit: 'public'})}>
+                                    <p>Edit Public Info</p>
+                                    <i className="fas fa-chevron-right"></i>
+                                </div>
+                                <div className='settings-option' onClick={() => this.setState({edit: 'private'})}>
+                                    <p>Edit Private Info</p>
+                                    <i className="fas fa-chevron-right"></i>
+                                </div>
+                                <div className='settings-option' onClick={() => this.setState({edit: 'settings'})}>
+                                    <p>General Settings</p>
+                                    <i className="fas fa-chevron-right"></i>
+                                </div>
+                            </div>
+                            <div className='settings-cnt' style={{left: !this.state.edit ? 100 + '%' : 0}}>
+                                <div className='settings-option-in' onClick={() => this.setState({edit: false})}>
+                                    <i className="fas fa-chevron-left"></i>
+                                    <p>Back</p>
+                                </div>
+                                <div className='settings-option-edit'>
+                                    <p>Name:</p>
+                                    <input type='text' value={this.state.me.first_name} />
+                                </div>
+                                <div className='settings-option-edit' >
+                                    <p>Surname:</p>
+                                    <input type='text' value={this.state.me.last_name} />
+                                </div>
+                                <div className='settings-option-edit' >
+                                    <p>Interests:</p>
+                                    <input type='text' value={this.state.me.tags} />
+                                </div>
+                                <div className='settings-option-edit lg'>
+                                    <p>About:</p>
+                                    <textarea type='text' value={this.state.me.about} />
+                                </div>
+                                <div className='settings-option'>
+                                    <p style={{textAlign: 'center', padding: 0}}>Update Location</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <p className="logout" onClick={this._logOut}>Sign Out</p>
+                    {this.state.edit ? <p className="save" onClick={this._save}>Save</p> : <p className="logout" onClick={this._logOut}>Sign Out</p>}
                 </div>
             </div>
         );
