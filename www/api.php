@@ -7,6 +7,7 @@ $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $post = json_decode(file_get_contents('php://input'), true);
 
 $methods = array(
+    'countUsers' => 'countUsers',
     'getUsers' => 'getUsers',
     'geoSort' => 'geoSort',
     'getBlacklist' => 'getBlacklist',

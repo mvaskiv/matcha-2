@@ -1,5 +1,16 @@
 <?php 
 
+function countUsers() {
+    $stmt = $GLOBALS['conn']->prepare(
+        "SELECT COUNT(id) FROM users;"
+    );
+    $stmt->execute();
+    $result = $stmt->fetch();
+    return json_encode(array(
+        'data' => $result[0]
+    ));
+}
+
 function addAffection($n, $id) {
     $stmt = $GLOBALS['conn']->prepare(
         "UPDATE users SET fame = fame + ? WHERE id = ?;"

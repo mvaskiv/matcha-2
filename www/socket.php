@@ -255,7 +255,15 @@ function onClose($connect) {
 
 function onMessage($connect, $data) {
     $payload = explode(' ', decode($data)['payload']);
-    if ($payload[1] === 'like') {
+    if ($payload[1] === 'talala') {
+        $keys = array_keys($GLOBALS['ids']);
+    
+        foreach ($keys as $id) {
+            $message->{'willy'} = 1;
+            fwrite($GLOBALS['ids'][$id], encode(json_encode($message)));
+            $i++;
+        }
+    } else if ($payload[1] === 'like') {
         if (isset($GLOBALS['pool'][$message->{'mate'}])) {
             $message->{'like'} = 1;
             fwrite($GLOBALS['ids'][$message->{'mate'}], encode(json_encode($message)));

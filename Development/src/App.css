@@ -637,6 +637,37 @@ body, html {
   z-index: 1;
 }
 
+.header h1 {
+  position: absolute;
+  top: 5px;
+  left: 15px;
+  color: #333;
+}
+
+.header .fa-kiss-wink-heart {
+  position: absolute;
+  left: 155px;
+  top: 40px;
+  font-size: 20px;
+  color: rgb(179, 31, 31);
+}
+
+.congrats {
+  position: absolute;
+  left: 0;
+  bottom: 60px;
+  width: 150px;
+  transform: rotate(35deg);
+  animation-name: vibrate;
+  animation-duration: 100ms;
+  animation-iteration-count: infinite;
+}
+
+@keyframes vibrate {
+  0% { transform: rotate(35deg); }
+  50% { transform: rotate(45deg); }
+  100% { transform: rotate(35deg); }
+}
 
 @keyframes menuBtn {
   0% { transform: translateX(0px); }

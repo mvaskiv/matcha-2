@@ -252,6 +252,12 @@ const Notification = (props) => {
     );
 }
 
+const SecretThing = (props) => {
+    return (
+        <img src={require('../img/willy.png')} alt='' className='congrats' />
+    )
+}
+
 class Home extends Component {
     constructor(props) {
       super(props);
@@ -265,8 +271,11 @@ class Home extends Component {
         notification: [],
         n_open: false,
         imgViewer: false,
+        secret: false,
+        trigger: 0,
       }
       this.url = require("../sound/light.mp3");
+      this.talala = require("../sound/talala.m4a");
       this.audio = new Audio(this.url);
       this.conn = new WebSocket('ws://' + window.location.hostname +  ':8200');
       this._socketInit();
@@ -276,6 +285,13 @@ class Home extends Component {
         this.conn.onmessage = (e) => {
             if (e.data !== 'refresh' && e.data !== 'connected') {
               let data = JSON.parse(e.data);
+              console.log(data);
+                if (data.willy) {
+                    let a = new Audio(this.talala);
+                    a.play();
+                    this.setState({secret: true});
+                    setTimeout(() => this.setState({secret: false, trigger: 0}), 5900);
+                }
                 if (data.chat === 2) {      
                   let a = this.state.notification;
                   if (a.length >= 5) {a.shift()}
@@ -367,6 +383,16 @@ class Home extends Component {
         // localStorage.setItem('user_data', JSON.stringify(state));
     }
 
+    _trigger = () => {
+        if (!this.state.secret && this.state.trigger > 7) {
+            console.log('Hello');
+            this.conn.send('willy talala');
+        } else {
+            this.setState({trigger: this.state.trigger + 1});
+        }
+        
+    }
+
     render() {
         let Notifications = null;
 
@@ -379,6 +405,7 @@ class Home extends Component {
         return (
         <div className="App">
           <header className="header">
+            <h1>MATCHA</h1><i className="far fa-kiss-wink-heart" onClick={this._trigger}></i>
             {/* <i class="far fa-envelope messages-icon"></i> */}
             <div className="menu mobhide" style={{width: this.state.menu ? 100 + 'vw' : 50 + 'px'}}>
                 <img src={require('../img/menu.png')} className="menu-btn" alt="logo" onClick={() => this.setState({popup: false, menu: !this.state.menu})} />
@@ -396,6 +423,7 @@ class Home extends Component {
                 <div className='notification-container' style={{right: this.state.lockMenu ? 350 + 'px' : 0}}>
                     { Notifications }
                 </div>
+                {this.state.secret && <SecretThing />}
             </div>
             
             {/* <div className="menu-shelf" style={{right: this.state.menuShown ? 0 + 'px' : -450 + 'px'}}>

@@ -5,8 +5,15 @@ class RegisterForm extends Component {
     constructor(props) {
       super(props);
       this.state = {
-  
+        count: 0
       }
+      this._bootstrapAsync();
+    }
+
+    _bootstrapAsync = () => {
+      API('countUsers', {id: 0}).then((res) => {
+        this.setState({count: res.data});
+      });
     }
   
     _register = () => {
@@ -40,7 +47,7 @@ class RegisterForm extends Component {
           <div className="login-msg">
             <h2 className="cancel-lg" onClick={this.props.close}>Cancel</h2>
             <h1>It's FREE</h1>
-            <h2>And we have approximately 500 users who will probably dislike you</h2>
+            <h2>And we have exactly {this.state.count} users who will probably dislike you</h2>
           </div>
         </div>
       );
