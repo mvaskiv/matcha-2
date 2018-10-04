@@ -1,7 +1,7 @@
 import mysql.connector
 from mysql.connector import Error
 from pprint import pprint
-
+import html
 
 mydb = mysql.connector.connect(
   host="localhost",
@@ -27,7 +27,7 @@ for line in sql2:
 	# pprint(sql1[it][9])
 	# pprint(sql1[it])
 	# pprint(line[0])
-	sql_upd = "UPDATE users SET first_name = \"{}\", last_name = \"{}\", login = \"{}\", avatar = \"{}\" WHERE id = {} ;".format(sql1[it][4], sql1[it][7], sql1[it][9],  sql1[it][6], line[0])
+	sql_upd = "UPDATE users SET first_name = \"{}\", last_name = \"{}\", login = \"{}\", avatar = \"{}\" WHERE id = {} ;".format(sql1[it][4].encode('utf-8').decode('utf-8').encode('ascii', 'xmlcharrefreplace'), sql1[it][7].encode('utf-8').decode('utf-8').encode('ascii', 'xmlcharrefreplace'), sql1[it][9],  sql1[it][6], line[0])
 	mycursor.execute(sql_upd)
 	mydb.commit()
 	it += 1

@@ -515,3 +515,232 @@ function updateProfilePic($post) {
         ));
     }
 }
+
+function editPublicUserInfo($post) { // DONE, need check
+    // first_name, last_name, latitude, longitude, tags, about
+    $stmt= $GLOBALS['conn']->prepare(
+        "UPDATE `users` SET first_name = ? , last_name = ? , latitude = ? , longitude = ? , tags = ? , about = ? , WHERE `id` = ? ;"
+    );
+    $res = $stmt->execute([
+        $post['first_name'],
+        $post['last_name'],
+        $post['latitude'],
+        $post['longitude'],
+        $post['tags'],
+        $post['about'],
+        $post['id'],
+    ]);
+    if ($res) {
+        return json_encode(array(
+            'ok' => true
+        ));
+    } else {
+        return json_encode(array(
+            'ok' => false
+        ));
+    }
+}
+
+function editPrivateUserInfo($post) { // DONE, need check
+    //  email, login, gender, seeking, dob
+    $stmt= $GLOBALS['conn']->prepare(
+        "UPDATE `users` SET email = ? , login = ? , gender = ? , seeking = ? , dob = ? WHERE `id` = ? ;"
+    );
+    $res = $stmt->execute([
+        $post['email'],
+        $post['login'],
+        $post['gender'],
+        $post['seeking'],
+        $post['dob'],
+        $post['id'],
+    ]);
+    if ($res) {
+        return json_encode(array(
+            'ok' => true
+        ));
+    } else {
+        return json_encode(array(
+            'ok' => false
+        ));
+    }
+}
+
+function editPassword($post) { // DONE, need check
+    //   password
+    $stmt= $GLOBALS['conn']->prepare(
+        "UPDATE `users` SET password = ?  WHERE `id` = ? ;"
+    );
+    $res = $stmt->execute([
+        hash('whirlpool', $post['password']),
+        $post['id'],
+    ]);
+    if ($res) {
+        return json_encode(array(
+            'ok' => true
+        ));
+    } else {
+        return json_encode(array(
+            'ok' => false
+        ));
+    }
+}
+
+function restorePassword($post) {
+    //   email, dob
+    $stmt= $GLOBALS['conn']->prepare(
+        "SELECT id FROM `users` WHERE email = ?  AND `dob` = ? ;"
+    );
+    $res = $stmt->execute([
+        $post['email']),
+        $post['dob'],
+    ]);
+    if ($res) {
+        $toemail = array(
+            'type' => 'restorePassword',
+            'login' => htmlspecialchars($post['login']),
+            'email' => htmlspecialchars($post['email']),
+        );
+        $check = sendEmail($toemail);
+        if ($check) {
+            return json_encode(array(
+                'ok' => true
+            ));
+        } else {
+            return json_encode(array(
+                'ok' => false,
+                'error' => 'Error send mail'
+            ));
+        }
+    } else {
+        return json_encode(array(
+            'ok' => false
+        ));
+    }
+}
+
+function registration($post) { // DONE, need check
+    //   email, login, gender, seeking, dob -> send confirmation email
+    $stmt= $GLOBALS['conn']->prepare(
+        "SELECT id FROM `users` WHERE email = ?  OR `login` = ? ;"
+    );
+    $res = $stmt->execute([
+        htmlspecialchars($post['email']),
+        htmlspecialchars($post['login']),
+    ]);
+    if ($res) {
+        return json_encode(array(
+            'ok' => false,
+            'error' => 'Bad login or email'
+        ));
+    }
+    $stmt= $GLOBALS['conn']->prepare(
+        "INSERT INTO `users` (`email`, `login`, `gender`, `seeking`, `dob`, `token`) values (?, ?, ?, ?, ?, ?);"
+    );
+    $newtoken = hash('whirlpool', htmlspecialchars($post['email']) . htmlspecialchars($post['login']) . time());
+    $res = $stmt->execute([
+        htmlspecialchars($post['email']),
+        htmlspecialchars($post['login']),
+        htmlspecialchars($post['gender']),
+        htmlspecialchars($post['seeking']),
+        $post['dob'],
+        $newtoken,
+    ]);
+    if ($res) {
+        $toemail = array(
+            'type' => 'registration',
+            'login' => htmlspecialchars($post['login']),
+            'email' => htmlspecialchars($post['email']),
+            'tokenurl' => $newtoken,
+        );
+        $check = sendEmail($toemail);
+        if ($check) {
+            return json_encode(array(
+                'ok' => true
+            ));
+        } else {
+            return json_encode(array(
+                'ok' => false,
+                'error' => 'Error send mail'
+            ));
+        }
+    } else {
+        return json_encode(array(
+            'ok' => false,
+            'error' => 'Create user: SQL error'
+        ));
+    }
+}
+
+function tokenConfirm($post) {
+    //    email, token -> true/false
+    $stmt= $GLOBALS['conn']->prepare(
+        "SELECT login FROM `users` WHERE email = ?  AND `token` = ? ;"
+    );
+    $res = $stmt->execute([
+        $post['email']),
+        $post['token'],
+    ]);
+    if ($res) {
+        $toemail = array(
+            'type' => 'tokenConfirm',
+            'login' => $res['login']),
+            'email' => htmlspecialchars($post['email']),
+        );
+        $check = sendEmail($toemail);
+        if ($check) {
+            return json_encode(array(
+                'ok' => true
+            ));
+        } else {
+            return json_encode(array(
+                'ok' => false,
+                'error' => 'Error send mail'
+            ));
+        }
+        return json_encode(array(
+            'ok' => true
+        ));
+    } else {
+        return json_encode(array(
+            'ok' => false
+        ));
+    }
+}
+
+
+function sendEmail($post) {
+    //    id, type (like, unlike, match, block, message, token)
+    if ($post['type'] === 'registration') {
+        include_once 'email-registration.php';
+        $message = emailcreate($post['login'], "http://localhost:3000/token/".$post['tokenurl']."/");
+        $subject = "MATCHA: Confirm your account";
+
+    } else if ($post['type'] === 'restorePassword') {
+        include_once 'email-restore.php';
+        $message = emailcreate($post['login'], "http://localhost:3000/");
+        $subject = "MATCHA: Restore password";
+
+    } else if ($post['type'] === 'tokenConfirm') {
+        include_once 'email-confirm.php';
+        $message = emailcreate($post['login'], "http://localhost:3000/");
+        $subject = "MATCHA: Account confirmed!";
+
+    }
+    // Always set content-type when sending HTML email
+    $headers = "MIME-Version: 1.0" . "\r\n";
+    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+    // More headers
+    $headers .= 'From: <no-reply@catcha.unit.ua>' . "\r\n";
+    $res = mail($post['email'], $subject, $message, $headers, '-fno-reply@matcha.unit.ua');
+    if ($res) {
+        // need add send token
+        return json_encode(array(
+            'ok' => true
+        ));
+    } else {
+        return json_encode(array(
+            'ok' => false
+        ));
+    }
+}
+
