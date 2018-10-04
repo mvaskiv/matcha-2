@@ -255,6 +255,23 @@ body, html {
   padding-left: 30px;
 }
 
+
+.login-form h3.msg {
+  text-align: left;
+  font-size: 35px;
+  padding: 15px;
+  margin: 0;
+  padding-left: 30px;
+}
+
+.login-form h4 {
+  text-align: left;
+  font-size: 20px;
+  padding: 15px;
+  margin: 0;
+  padding-left: 30px;
+}
+
 .form-input {
   width: 81%;
   font-size: 1.5em;

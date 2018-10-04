@@ -65,7 +65,7 @@ function geoSort($post) {
     DATEDIFF(CURDATE(), dob)/365 AS Age
     FROM users "
     . $gender .
-    " AND seeking = '" . $post['seeking'] . "' "
+    " AND `status` = 1 AND seeking = '" . $post['seeking'] . "' "
     . $tags .
     "
     AND fame >= " . $post['fame'] . "
@@ -775,8 +775,8 @@ function sendEmail($post) {
     $headers = "MIME-Version: 1.0" . "\r\n";
     $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
     // More headers
-    $headers .= 'From: <no-reply@catcha.unit.ua>' . "\r\n";
-    $res = mail($post['email'], $subject, $message, $headers, '-fno-reply@matcha.unit.ua');
+    $headers .= 'From: <no-reply@matcha.pp.ua>' . "\r\n";
+    $res = mail($post['email'], $subject, $message, $headers, '-fno-reply@matcha.pp.ua');
     if ($res) {
         // need add send token
         return json_encode(array(

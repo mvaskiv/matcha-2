@@ -26,7 +26,7 @@ class RegisterForm extends Component {
       API('registration', this.state).then((res) => {
         console.log(res);
         if (res.ok) {
-          console.log('ok');
+          this.setState({success: true});
         }
       })
     }
@@ -40,25 +40,32 @@ class RegisterForm extends Component {
         <div className='mob-scroll'>
           <div className="login-form">
             <h2>Register</h2>
-            <input type='text' className='form-input' placeholder='Login' onChange={this._textIn} name='login' value={this.state.login} />
-            <label>Email:</label>
-            <input type='email' className='form-input' placeholder='john@doe.com' onChange={this._textIn} name='email' value={this.state.email}/>
-            <br />
-            <label>Date of Birth:</label>
-            <input type='date' className='form-input' placeholder='Date of Birth' onChange={this._textIn} name='dob' value={this.state.dob}/>
-            <label>Gender:</label>
-            <div className='signup-sex'>
-              <p onClick={() => this.setState({gender: 'M'})} className='third' style={{color: this.state.gender === 'M' ? '#e39' : '#999'}}>Male</p>
-              <p>|</p>
-              <p onClick={() => this.setState({gender: 'F'})} className='third'style={{color: this.state.gender === 'F' ? '#e39' : '#999'}}>Female</p>
-            </div>
-            <label>Sexuality:</label>
-            <div className='signup-sex'>
-              <p onClick={() => this.setState({seeking: 'm'})} className='third' style={{color: this.state.seeking === 'm' ? '#e39' : '#999'}}>Straight</p>
-              <p onClick={() => this.setState({seeking: 'f'})} className='third'style={{color: this.state.seeking === 'f' ? '#e39' : '#999'}}>Gay</p>
-              <p onClick={() => this.setState({seeking: 'b'})} className='third'style={{color: this.state.seeking === 'b' ? '#e39' : '#999'}}>Bisexual</p>
-            </div>
-            <h3 className="sign" onClick={this._register}>Sign Up</h3>
+            {this.state.success ? 
+              <div><h3 className='msg'>Check your inbox</h3>
+              <h4>And follow the link we sent you in order to finish the registration process</h4></div>
+              :
+              <div>
+              <input type='text' className='form-input' placeholder='Login' onChange={this._textIn} name='login' value={this.state.login} />
+              <label>Email:</label>
+              <input type='email' className='form-input' placeholder='john@doe.com' onChange={this._textIn} name='email' value={this.state.email}/>
+              <br />
+              <label>Date of Birth:</label>
+              <input type='date' className='form-input' placeholder='Date of Birth' onChange={this._textIn} name='dob' value={this.state.dob}/>
+              <label>Gender:</label>
+              <div className='signup-sex'>
+                <p onClick={() => this.setState({gender: 'M'})} className='third' style={{color: this.state.gender === 'M' ? '#e39' : '#999'}}>Male</p>
+                <p>|</p>
+                <p onClick={() => this.setState({gender: 'F'})} className='third'style={{color: this.state.gender === 'F' ? '#e39' : '#999'}}>Female</p>
+              </div>
+              <label>Looking for:</label>
+              <div className='signup-sex'>
+                <p onClick={() => this.setState({seeking: 'm'})} className='third' style={{color: this.state.seeking === 'm' ? '#e39' : '#999'}}>Men</p>
+                <p onClick={() => this.setState({seeking: 'f'})} className='third'style={{color: this.state.seeking === 'f' ? '#e39' : '#999'}}>Women</p>
+                <p onClick={() => this.setState({seeking: 'b'})} className='third'style={{color: this.state.seeking === 'b' ? '#e39' : '#999'}}>Both</p>
+              </div>
+              <h3 className="sign" onClick={this._register}>Sign Up</h3>
+              </div>
+            }
           </div>
           <div className="login-msg">
             <h2 className="cancel-lg" onClick={this.props.close}>Cancel</h2>
@@ -83,13 +90,18 @@ class LoginForm extends Component {
       console.log(this.state);
       API('login', this.state).then((res) => {
         if (res.ok) {
-          sessionStorage.setItem('user_data', JSON.stringify(res.data));
-          localStorage.setItem('user_data', JSON.stringify(res.data));
-         
+          console.log(res.data.status);
+          if (res.data.status == 1) {
+            sessionStorage.setItem('user_data', JSON.stringify(res.data));
+            localStorage.setItem('user_data', JSON.stringify(res.data));
+          } else {
+            alert('You need to confirm your email address first');
+          }
         } else {
-          alert('Wrong cred.');
+          alert('Please, check your credentials');
         }
-      }).then(() => window.location.reload())
+      })
+      .then(() => window.location.reload())
     }
 
     _textIn = (e) => {

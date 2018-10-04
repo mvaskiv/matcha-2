@@ -111,6 +111,7 @@ export default class Browser extends Component {
     }
 
     _onScroll = () => {
+        console.log(this.state.n)
         API('geoSort', this.state).then((res) => {
             if (res) {
                 this._setDataSource(res.data, 1);
