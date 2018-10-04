@@ -1,69 +1,126 @@
 import React, { Component } from 'react';
 import API from '../backyard/api';
 
+export default class Chats extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            id: false,
+            me: false,
+            chat: false,
+            chatOpen: false,
+            dataSource: [],
+            Matches: [],
+        }
+        this._bootstrapAsync();
+    }
 
-const TypingIndicator = (props) => {
-    return (
-        <div className='typing'>
-            <img className='typing-indicator' alt='' src={require('../img/typing.gif')} />
-        </div>
-    );
-}
+    _bootstrapAsync = async () => {
+        let data = await JSON.parse(localStorage.getItem('user_data'));
+        this.setState({id: data.id});
+        this.setState({me: data});
+        API('chats', {id: data.id}).then((res) => {
+            if (res.data) {
+                this.setState({dataSource: res.data});
+            }
+        }).then(() => {
+            API('matches', {id: data.id}).then((res) => {
+                if (res.data) {
+                    this.setState({Matches: res.data});
+                }
+            }).then(() => this.setState({updated: true}))
+        })
+    }
 
-const MessageIndicator = (props) => {
-    return (
-        <div className='message-indicator' style={{bottom: props.typing ? 68 + 'px' : 35 + 'px'}}>
-            <i className="fas fa-chevron-circle-down" style={{color: props.color ? '#cc2222' : '#aaa'}} onClick={() => props.scroll()}></i>
-        </div>
-    );
-}
+    componentDidMount() {
+        setTimeout(() => {
+            if (this.props.n_open) {
+                this._openChat(this.props.n_open);
+            }
+        }, 100);
+    }
 
-const MessageGroup = (props) => {
-    if (props.msg.sender === props.myid) {
+    componentWillUnmount() {
+        this.props.clear();
+        this.props.sockets();
+    }
+
+    _setChatId = (chat) => {
+        let data = {
+            myid: this.state.id,
+            mate: chat.mate_id,
+            mate_avatar: chat.mate_avatar,
+            my_avatar: this.state.me.avatar,
+            my_name: this.state.me.first_name,
+            mate_firstname: chat.name,
+        }
+        API('chat_init', data).then((res) => {
+            if (res.ok) {
+                chat.id = res.id
+                chat.chat = res.id;
+            } else {
+
+            }
+        }).then(() => {
+            this.setState({chat: chat});
+            setTimeout(() => this.setState({chatOpen: true}), 100);
+        })
+    }
+
+    _openChat = (chat) => {
+        if (chat.id === -42) {
+            this._setChatId(chat); 
+        }
+        else if (chat === 0) {
+            this.setState({chatOpen: false});
+            setTimeout(() => this.setState({chat: false}), 300);
+        } else {
+            this.setState({chat: chat});
+            this.setState({chatOpen: true});
+        }
+    }
+
+    render() {
+        let Chats = null;
+        let Matches = null;
+
+        if (this.state.dataSource) {
+            Chats = this.state.dataSource.map((msg, i) => {
+                return <ChatPreview data={ msg } id={ this.state.id } key={ i } open={ this._openChat } />
+            })
+        }
+        if (this.state.Matches) {
+            Matches = this.state.Matches.map((match, i) => {
+                return <MatchesList data={ match } id={ this.state.id } key={ i } open={ this._openChat } />
+            })
+        }
+
         return (
-            <div className='message-bubble group'>
-                <div className='bubble-cnt sent'>
-                    <p className='message-body sent group'>{ props.msg.body }</p>
+            <div>
+                <div id="user-panel" style={{height: this.props.locked ? 'calc(100vh - 190px)' : 550 + 'px', overflowY: !this.state.chat ? 'scroll' : 'hidden'}}>
+                    <div className='profile-info'>
+                        <div className='profile-info-full top chat'>
+                            {!this.state.chatOpen ? <h2>Chats</h2> : <div className='kostyl'><p onClick={() => this._openChat(0)} className='chat-back'>return</p><h2 style={{textAlign: 'right'}}>{ this.state.chat.name }</h2></div>}
+                        </div>
+                        <div className='chat-scroll' style={{height: this.props.locked ? 'calc(100vh - 260px)' : 480 + 'px'}}>
+                            <div className='profile-info-full chat' style={{left: this.state.chatOpen ? -33 + '%' : 17.5 + 'px'}}>
+                                {this.state.Matches[0] && <div className='matches-preview'>
+                                    { Matches }
+                                </div> }
+                                <div className="chats-preview">
+                                    { Chats }
+                                </div>
+                            </div>
+                            <div className='chat-body' style={{height: this.props.locked ? 'calc(100vh - 275px)' : 465 + 'px', left: this.state.chatOpen ? 0 + '%' : 110 + '%'}}>
+                                {this.state.chat && <ChatScreen locked={ this.props.locked } chat={ this.state.chat } myid={ this.state.id } conn={this.props.conn} me={ this.state.me } refresh={this._bootstrapAsync} sockets={this.props.sockets} />}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        )
-    } else {
-        return (
-            <div className='message-bubble group'>
-                <div className='bubble-cnt received'>
-                    <p className='message-body received group'>{ props.msg.body }</p>
-                </div>
-            </div>
-        )
+        );
     }
 }
-
-const MessageBubble = (props) => {
-    let timestamp =  props.msg.timestamp.split(" ")[1].split(":");
-
-    if (props.msg.sender === props.myid) {
-        return (
-            <div className='message-bubble'>
-                <div className='bubble-cnt sent'>
-                    <img className='message-avatar sent' src={ props.myavatar } alt='' />
-                    <p className='message-body sent'>{ props.msg.body }</p>
-                    <p className='message-time sent'>{timestamp[0] + ':' + timestamp[1]}</p>
-                </div>
-            </div>
-        )
-    } else {
-        return (
-            <div className='message-bubble'>
-                <div className='bubble-cnt received'>
-                    <img className='message-avatar received' src={ props.chat.avatar } alt='' />
-                    <p className='message-body received'>{ props.msg.body }</p>
-                    <p className='message-time received'>{timestamp[0] + ':' + timestamp[1]}</p>
-                </div>
-            </div>
-        )
-    }
-}
-
 
 class ChatScreen extends Component {
     constructor(props) {
@@ -293,8 +350,67 @@ class ChatScreen extends Component {
     }
 }
 
+const TypingIndicator = (props) => {
+    return (
+        <div className='typing'>
+            <img className='typing-indicator' alt='' src={require('../img/typing.gif')} />
+        </div>
+    );
+}
 
+const MessageIndicator = (props) => {
+    return (
+        <div className='message-indicator' style={{bottom: props.typing ? 68 + 'px' : 35 + 'px'}}>
+            <i className="fas fa-chevron-circle-down" style={{color: props.color ? '#cc2222' : '#aaa'}} onClick={() => props.scroll()}></i>
+        </div>
+    );
+}
 
+const MessageGroup = (props) => {
+    if (props.msg.sender === props.myid) {
+        return (
+            <div className='message-bubble group'>
+                <div className='bubble-cnt sent'>
+                    <p className='message-body sent group'>{ props.msg.body }</p>
+                </div>
+            </div>
+        )
+    } else {
+        return (
+            <div className='message-bubble group'>
+                <div className='bubble-cnt received'>
+                    <p className='message-body received group'>{ props.msg.body }</p>
+                </div>
+            </div>
+        )
+    }
+}
+
+const MessageBubble = (props) => {
+    let timestamp =  props.msg.timestamp.split(" ")[1].split(":");
+
+    if (props.msg.sender === props.myid) {
+        return (
+            <div className='message-bubble'>
+                <div className='bubble-cnt sent'>
+                    <img className='message-avatar sent' src={ props.myavatar } alt='' />
+                    <p className='message-body sent'>{ props.msg.body }</p>
+                    <p className='message-time sent'>{timestamp[0] + ':' + timestamp[1]}</p>
+                </div>
+            </div>
+        )
+    } else {
+        return (
+            <div className='message-bubble'>
+                <div className='bubble-cnt received'>
+                    <img className='message-avatar received' src={ props.chat.avatar } alt='' />
+                    <p className='message-body received'>{ props.msg.body }</p>
+                    <p className='message-time received'>{timestamp[0] + ':' + timestamp[1]}</p>
+                </div>
+            </div>
+        )
+    }
+}
 
 const ChatPreview = (props) => {
     let mate = props.data.initiator === props.id ?
@@ -323,126 +439,3 @@ const MatchesList = (props) => {
         <img src={ mate.avatar } className='match-sm' alt='' onClick={() => props.open(mate)} />
     )
 }
-
-class Chats extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            id: false,
-            me: false,
-            chat: false,
-            chatOpen: false,
-            dataSource: [],
-            Matches: [],
-        }
-        this._bootstrapAsync();
-    }
-
-    _bootstrapAsync = async () => {
-        let data = await JSON.parse(localStorage.getItem('user_data'));
-        this.setState({id: data.id});
-        this.setState({me: data});
-        API('chats', {id: data.id}).then((res) => {
-            if (res.data) {
-                this.setState({dataSource: res.data});
-            }
-        }).then(() => {
-            API('matches', {id: data.id}).then((res) => {
-                if (res.data) {
-                    this.setState({Matches: res.data});
-                }
-            }).then(() => this.setState({updated: true}))
-        })
-    }
-
-    componentDidMount() {
-        setTimeout(() => {
-            if (this.props.n_open) {
-                this._openChat(this.props.n_open);
-            }
-        }, 100);
-    }
-
-    componentWillUnmount() {
-        this.props.clear();
-        this.props.sockets();
-    }
-
-    _setChatId = (chat) => {
-        let data = {
-            myid: this.state.id,
-            mate: chat.mate_id,
-            mate_avatar: chat.mate_avatar,
-            my_avatar: this.state.me.avatar,
-            my_name: this.state.me.first_name,
-            mate_firstname: chat.name,
-        }
-        API('chat_init', data).then((res) => {
-            if (res.ok) {
-                chat.id = res.id
-                chat.chat = res.id;
-            } else {
-
-            }
-        }).then(() => {
-            this.setState({chat: chat});
-            setTimeout(() => this.setState({chatOpen: true}), 100);
-        })
-    }
-
-    _openChat = (chat) => {
-        if (chat.id === -42) {
-            this._setChatId(chat); 
-        }
-        else if (chat === 0) {
-            this.setState({chatOpen: false});
-            setTimeout(() => this.setState({chat: false}), 300);
-        } else {
-            this.setState({chat: chat});
-            this.setState({chatOpen: true});
-        }
-    }
-
-    render() {
-        let Chats = null;
-        let Matches = null;
-
-        if (this.state.dataSource) {
-            Chats = this.state.dataSource.map((msg, i) => {
-                return <ChatPreview data={ msg } id={ this.state.id } key={ i } open={ this._openChat } />
-            })
-        }
-        if (this.state.Matches) {
-            Matches = this.state.Matches.map((match, i) => {
-                return <MatchesList data={ match } id={ this.state.id } key={ i } open={ this._openChat } />
-            })
-        }
-
-        return (
-            <div>
-                <div id="user-panel" style={{height: this.props.locked ? 'calc(100vh - 190px)' : 550 + 'px', overflowY: !this.state.chat ? 'scroll' : 'hidden'}}>
-                    <div className='profile-info'>
-                        <div className='profile-info-full top chat'>
-                            {!this.state.chatOpen ? <h2>Chats</h2> : <div className='kostyl'><p onClick={() => this._openChat(0)} className='chat-back'>return</p><h2 style={{textAlign: 'right'}}>{ this.state.chat.name }</h2></div>}
-                        </div>
-                        <div className='chat-scroll' style={{height: this.props.locked ? 'calc(100vh - 260px)' : 480 + 'px'}}>
-                            <div className='profile-info-full chat' style={{left: this.state.chatOpen ? -33 + '%' : 17.5 + 'px'}}>
-                                {this.state.Matches[0] && <div className='matches-preview'>
-                                    { Matches }
-                                </div> }
-                                <div className="chats-preview">
-                                    { Chats }
-                                </div>
-                            </div>
-                            <div className='chat-body' style={{height: this.props.locked ? 'calc(100vh - 275px)' : 465 + 'px', left: this.state.chatOpen ? 0 + '%' : 110 + '%'}}>
-                                {this.state.chat && <ChatScreen locked={ this.props.locked } chat={ this.state.chat } myid={ this.state.id } conn={this.props.conn} me={ this.state.me } refresh={this._bootstrapAsync} sockets={this.props.sockets} />}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-}
-
-export default Chats

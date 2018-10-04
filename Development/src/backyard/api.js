@@ -39,3 +39,28 @@ export function GEO(coords) {
         });
     });
 }
+
+export function SETUP() {
+    let BaseURL = 'https://randomuser.me/api/?';
+    let options = 'gender=m&inc=picture&results=550';
+    return new Promise((resolve, reject) => {
+        fetch(BaseURL+options, {
+            method: 'GET',
+            // mode: 'no-cors',
+            // headers: {
+            //     Accept: 'application/json',
+            //     'Content-Type': 'application/json',
+            // },
+            // body: JSON.stringify(data)
+        })
+        .then((response) => response.json())
+        .then((res) => {
+            console.log(res);
+           
+            resolve(res);
+        })
+        .catch((error) => {
+            reject(error);
+        });
+    });
+}

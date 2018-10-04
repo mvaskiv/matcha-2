@@ -33,6 +33,7 @@ function getUsers($post) {
 
 function geoSort($post) {
     $tags = '';
+   
     if ($post['tags']) {
         $tag_list = explode(' ', trim($post['tags']));
         $tags = "AND tags LIKE '%" . $tag_list[0] . "%' ";
@@ -49,7 +50,7 @@ function geoSort($post) {
     } else {
         $gender = "WHERE gender = '" . $post['gender'] . "'";
     }
-
+  
     $stmt = $GLOBALS['conn']->prepare(
     "SELECT
         *, (
@@ -76,9 +77,15 @@ function geoSort($post) {
     );
     $stmt->execute();
     $result = $stmt->fetchAll();
+
+    // for($i = 0; $i < count($result); $i++) {
+    //     $result[$i]["1"] = htmlspecialchars($result[$i]["1"]);
+    //     $result[$i]["2"] = htmlspecialchars($result[$i]["2"]);
+    //     $result[$i]["first_name"] = htmlspecialchars($result[$i]["first_name"]);
+    //     $result[$i]["last_name"] = htmlspecialchars($result[$i]["last_name"]);
+    // }
     return json_encode(array(
         'data' => $result,
-        'query' => $stmt
     ));
 }
 
@@ -98,7 +105,7 @@ function likeNmatch($post) {
         $post['mate']
     ]);
     $result = $stmt->fetch();
-    addAffection(1, $post['myid']);
+  
     if ($result) {
         return json_encode(array(
             'ok' => true,
@@ -128,7 +135,7 @@ function login($post) {
     );
     $stmt->execute();
     $result = $stmt->fetch();
-    addAffection(10, $result['id']);
+    // addAffection(10, $result['id']);
     if ($result) {
         return json_encode(array(
             'data' => $result,
@@ -516,16 +523,34 @@ function updateProfilePic($post) {
     }
 }
 
-function editPublicUserInfo($post) { // DONE, need check
+function updateLocation($post) {
+    $stmt= $GLOBALS['conn']->prepare(
+        "UPDATE `users` SET latitude = ?, longitude = ? WHERE `id` = ? ;"
+    );
+    $res = $stmt->execute([
+        $post['lat'],
+        $post['lon'],
+        $post['id'],
+    ]);
+    if ($res) {
+        return json_encode(array(
+            'ok' => true
+        ));
+    } else {
+        return json_encode(array(
+            'ok' => false
+        ));
+    }
+}
+
+function editPublic($post) { // DONE, need check
     // first_name, last_name, latitude, longitude, tags, about
     $stmt= $GLOBALS['conn']->prepare(
-        "UPDATE `users` SET first_name = ? , last_name = ? , latitude = ? , longitude = ? , tags = ? , about = ? , WHERE `id` = ? ;"
+        "UPDATE `users` SET first_name = ? , last_name = ? , tags = ? , about = ? WHERE `id` = ? ;"
     );
     $res = $stmt->execute([
         $post['first_name'],
         $post['last_name'],
-        $post['latitude'],
-        $post['longitude'],
         $post['tags'],
         $post['about'],
         $post['id'],
@@ -541,7 +566,25 @@ function editPublicUserInfo($post) { // DONE, need check
     }
 }
 
-function editPrivateUserInfo($post) { // DONE, need check
+function getInfo($post) {
+    $stmt = $GLOBALS['conn']->prepare(
+        "SELECT * FROM `users` WHERE id = '" . $post['id'] . "' LIMIT 1;"
+    );
+    $stmt->execute();
+    $result = $stmt->fetch();
+    if ($result) {
+        return json_encode(array(
+            'data' => $result,
+            'ok' => true,
+        ));
+    } else {
+        return json_encode(array(
+            'ok' => false,
+        ));
+    }
+}
+
+function editPrivate($post) { // DONE, need check
     //  email, login, gender, seeking, dob
     $stmt= $GLOBALS['conn']->prepare(
         "UPDATE `users` SET email = ? , login = ? , gender = ? , seeking = ? , dob = ? WHERE `id` = ? ;"
@@ -590,10 +633,11 @@ function restorePassword($post) {
     $stmt= $GLOBALS['conn']->prepare(
         "SELECT id FROM `users` WHERE email = ?  AND `dob` = ? ;"
     );
-    $res = $stmt->execute([
-        $post['email']),
+    $stmt->execute([
+        $post['email'],
         $post['dob'],
     ]);
+    $res = $stmt->fetch();
     if ($res) {
         $toemail = array(
             'type' => 'restorePassword',
@@ -623,10 +667,11 @@ function registration($post) { // DONE, need check
     $stmt= $GLOBALS['conn']->prepare(
         "SELECT id FROM `users` WHERE email = ?  OR `login` = ? ;"
     );
-    $res = $stmt->execute([
+    $stmt->execute([
         htmlspecialchars($post['email']),
         htmlspecialchars($post['login']),
     ]);
+    $res = $stmt->fetch();
     if ($res) {
         return json_encode(array(
             'ok' => false,
@@ -676,14 +721,15 @@ function tokenConfirm($post) {
     $stmt= $GLOBALS['conn']->prepare(
         "SELECT login FROM `users` WHERE email = ?  AND `token` = ? ;"
     );
-    $res = $stmt->execute([
-        $post['email']),
+    $stmt->execute([
+        $post['email'],
         $post['token'],
     ]);
+    $res = $stmt->fetch();
     if ($res) {
         $toemail = array(
             'type' => 'tokenConfirm',
-            'login' => $res['login']),
+            'login' => $res['login'],
             'email' => htmlspecialchars($post['email']),
         );
         $check = sendEmail($toemail);
@@ -706,7 +752,6 @@ function tokenConfirm($post) {
         ));
     }
 }
-
 
 function sendEmail($post) {
     //    id, type (like, unlike, match, block, message, token)

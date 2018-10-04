@@ -5,7 +5,12 @@ class RegisterForm extends Component {
     constructor(props) {
       super(props);
       this.state = {
-        count: 0
+        count: 0,
+        login: '',
+        email: '',
+        gender: '',
+        seeking: '',
+        dob: '1960-10-01',
       }
       this._bootstrapAsync();
     }
@@ -17,32 +22,43 @@ class RegisterForm extends Component {
     }
   
     _register = () => {
-  
+      console.log(this.state);
+      API('registration', this.state).then((res) => {
+        console.log(res);
+        if (res.ok) {
+          console.log('ok');
+        }
+      })
     }
   
+    _textIn = (e) => {
+      this.setState({[e.target.name]:e.target.value});
+    }
+
     render() {
       return (
         <div className='mob-scroll'>
           <div className="login-form">
             <h2>Register</h2>
-            <input type='text' className='form-input' placeholder='Login (optional)' />
+            <input type='text' className='form-input' placeholder='Login' onChange={this._textIn} name='login' value={this.state.login} />
             <label>Email:</label>
-            <input type='text' className='form-input' placeholder='john@doe.com'/>
+            <input type='email' className='form-input' placeholder='john@doe.com' onChange={this._textIn} name='email' value={this.state.email}/>
+            <br />
             <label>Date of Birth:</label>
-            <input type='date' className='form-input' placeholder='Date of Birth'/>
+            <input type='date' className='form-input' placeholder='Date of Birth' onChange={this._textIn} name='dob' value={this.state.dob}/>
             <label>Gender:</label>
             <div className='signup-sex'>
-              <p onClick={() => this.setState({gender: 'm'})} className='third' style={{color: this.state.gender === 'm' ? '#e39' : '#999'}}>Male</p>
+              <p onClick={() => this.setState({gender: 'M'})} className='third' style={{color: this.state.gender === 'M' ? '#e39' : '#999'}}>Male</p>
               <p>|</p>
-              <p onClick={() => this.setState({gender: 'f'})} className='third'style={{color: this.state.gender === 'f' ? '#e39' : '#999'}}>Female</p>
+              <p onClick={() => this.setState({gender: 'F'})} className='third'style={{color: this.state.gender === 'F' ? '#e39' : '#999'}}>Female</p>
             </div>
             <label>Sexuality:</label>
             <div className='signup-sex'>
-              <p onClick={() => this.setState({gender: 'm'})} className='third' style={{color: this.state.gender === 'm' ? '#e39' : '#999'}}>Straight</p>
-              <p onClick={() => this.setState({gender: 'f'})} className='third'style={{color: this.state.gender === 'f' ? '#e39' : '#999'}}>Gay</p>
-              <p onClick={() => this.setState({gender: 'b'})} className='third'style={{color: this.state.gender === 'b' ? '#e39' : '#999'}}>Bisexual</p>
+              <p onClick={() => this.setState({seeking: 'm'})} className='third' style={{color: this.state.seeking === 'm' ? '#e39' : '#999'}}>Straight</p>
+              <p onClick={() => this.setState({seeking: 'f'})} className='third'style={{color: this.state.seeking === 'f' ? '#e39' : '#999'}}>Gay</p>
+              <p onClick={() => this.setState({seeking: 'b'})} className='third'style={{color: this.state.seeking === 'b' ? '#e39' : '#999'}}>Bisexual</p>
             </div>
-            <h3 className="sign" onClick={this._logIn}>Sign Up</h3>
+            <h3 className="sign" onClick={this._register}>Sign Up</h3>
           </div>
           <div className="login-msg">
             <h2 className="cancel-lg" onClick={this.props.close}>Cancel</h2>
@@ -64,6 +80,7 @@ class LoginForm extends Component {
     }
   
     _logIn = () => {
+      console.log(this.state);
       API('login', this.state).then((res) => {
         if (res.ok) {
           sessionStorage.setItem('user_data', JSON.stringify(res.data));

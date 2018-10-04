@@ -105,7 +105,7 @@ export default class Browser extends Component {
     }
 
     _scrollListener = () => {
-        if (this.users.scrollTop + this.users.clientHeight >= this.users.scrollHeight) {
+        if (this.users.scrollTop + this.users.clientHeight >= this.users.scrollHeight - 80) {
             this._onScroll();
         }
     }
@@ -240,6 +240,7 @@ export default class Browser extends Component {
                             </div>
                         </div>
                     </div>
+                    <i className="fas fa-map-marked-alt" onClick={this.props.mapView}></i>
                     <p className='apply' onClick={() => {this._bootstrapAsync(); this._toggleSearch()}}>Apply</p>
                 </div>
                 { Content }

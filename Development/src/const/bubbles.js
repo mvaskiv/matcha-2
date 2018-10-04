@@ -67,3 +67,21 @@ export const PersonBubble = (props) => {
         return null;
     }
 }
+
+export const Notification = (props) => {
+    return (
+        <div className='notification'>
+            <img src={ props.data.sender_avatar } alt='' />
+            <h2>{ props.data.sender_name }</h2>
+            <p>{props.data.id && 'Message: '}{ props.data.body }</p>
+            <h3 onClick={ () => props.open({id: props.data.id, mate_id: props.data.myid, name: props.data.sender_name, avatar: props.data.sender_avatar}) }>open</h3>
+            {props.n === 0 && <p className='clear-notifications' onClick={props.clear}>clear</p>}
+        </div>
+    );
+}
+
+export const SecretThing = (props) => {
+    return (
+        <img src={require('../img/willy.png')} alt='' className='congrats' />
+    )
+}

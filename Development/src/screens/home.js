@@ -1,313 +1,12 @@
 import React, { Component } from 'react';
+import {
+    SecretThing,
+    Notification } from '../const/bubbles';
 import API from '../backyard/api';
 import Browser from './browser';
-import Chats from './chat';
 import BrowserMap from './mapview';
-
-import { TagBubbleConst, PictureThumb } from '../const/bubbles';
-
-
-const ImageUpload = (props) => {
-    return (
-        <div>
-            <input type='file' onChange={this._fileHandler} />
-            <button onClick={this._uploadImg}>Upload</button>
-        </div>
-    )
-}
-
-class Profile extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            id: false,
-            info: false,
-            city: false,
-            picture: null,
-            addPicture: false,
-            changeProfilePic: false,
-            avatar: false,
-            img: false,
-        }
-        this._bootstrapAsync();
-    }
-    
-    _bootstrapAsync = async () => {
-        let data = await JSON.parse(localStorage.getItem('user_data'));
-        this._getImages(data.id);
-        // GEO().then((res) => this.setState({city: res}));
-        this.setState({info: data});
-    }
-
-    _getImages = (id) => {
-        API('getImages', {id: id}).then((res) => {
-            if (res.data) {
-                this.setState({img: res.data.split(' ')});
-            }
-            if (res.avatar) {
-                this.setState({avatar: res.avatar});
-            }
-        });
-    }
-    
-    _getAge(d) {
-        var dD = new Date(d);
-        var aD = Date.now() - dD.getTime();
-        var aT = new Date(aD);
-        return Math.abs(aT.getUTCFullYear() - 1970);
-    }
-
-    componentWillMount() {
-        
-    }
-
-    componentDidUpdate() {
-    }
-
-    _addPicture = () => {
-        this.setState({addPicture: true})
-    }
-
-    _fileHandler = (e) => {
-        this._prepareImg(e.target.files[0]);
-    }
-
-    _prepareImg = (picture) => {
-        let reader = new FileReader();
-        reader.readAsDataURL(picture);
-        reader.onload = (e) => {
-            this.setState({picture: e.target.result})
-        };
-    }
-
-    _uploadImg = () => {
-        API('imgUpload', {picture: this.state.picture, id: this.state.info.id}).then((res) => {
-            if (res.data) {
-                this._getImages(this.state.info.id);
-            } else {
-                alert('Oops, error on the server side. PLease, try again a bit later');
-            }
-        }).then(() => setTimeout(() => this.setState({addPicture: false, updated: true}), 500));
-    }
-
-    _changeProfilePic = (i) => {
-        if (i >= 0) {
-            API('updateProfilePic', {id: this.state.info.id, avatar: this.state.img[i]}).then((res) => {
-                if (res.ok) {
-                    this._getImages(this.state.info.id);
-                } else {
-                    alert('Oops, error on the server side. PLease, try again a bit later');
-                }
-            })
-            this.setState({changeProfilePic: false});
-        } else {
-            this.setState({changeProfilePic: !this.state.changeProfilePic});
-        }
-    }
-
-    render() {
-        let Tags = null;
-        let Pictures = null;
-        if (this.state.info.tags) {
-            let array = this.state.info.tags.split(' ');
-            Tags = array.map((tag, i) => {
-                return <TagBubbleConst text={tag} key={ i } delete={this._deleteTag} />
-            })
-        }
-
-        if (this.state.img) {
-            Pictures = this.state.img.map((pic, i) => {
-                return <PictureThumb pic={ pic } all={ this.state.img } key={ i } n={ i } open={ this.state.changeProfilePic ? () => this._changeProfilePic(i) : this.props.openImg } my={ true } />
-            });
-            if (this.state.img.length < 5) {
-                Pictures.push(<PictureThumb add={ this._addPicture } key={ 'add-a-picture-button' } /> );
-            }
-        } else {
-            Pictures = <PictureThumb add={ this._addPicture } /> 
-        }
-
-        return (
-            <div>
-                <div id="user-panel">
-                    <img id="user-avatar" onClick={() => this._changeProfilePic(-42)} src={this.state.avatar ? this.state.avatar : require('../img/avatar.png')} alt='' />
-                    {/* <p className="info likes">Affection</p>
-                    <p className="counter likes">253</p>
-                    <p className="info posts">Matches</p>
-                    <p className="counter posts">121</p> */}
-                    <div className='profile-info me'>
-                        <div className='profile-info-full top'>
-                            <h2>{ this.state.info.first_name }</h2>
-                            <p>{this.state.changeProfilePic ? 'To update your profile picture, select it from the ones available below. Or use the pluss button to upload something new.' : this.state.city + ', ' + this._getAge(this.state.info.dob) + ' y.o.'}</p>
-                        </div>
-                        <div className='profile-info-half'>
-                            <label>Gender:</label>
-                            <p>{ this.state.info.gender === 'M' ? "Male" : "Female" }</p>
-                        </div>
-                        <div className='profile-info-half'>
-                            <label>Looking for:</label>
-                            <p>{ this.state.info.seeking === 'm' ? "Men" : this.state.info.seeking === 'f' ? "Women" : "Both" }</p>
-                        </div>
-                        <div className='profile-info-full'>
-                            <label>Interested in:</label>
-                            {/* <p>{ this.state.info.tags }</p> */}
-                            <div className='tags-cnt'>
-                                { Tags }
-                            </div>
-                        </div>
-                        <div className='profile-info-full' style={{marginTop: 10 + 'px'}}>
-                            <label>About me:</label>
-                            <p>{ this.state.info.about }</p>
-                        </div>
-                        <div className='profile-info-full' style={{marginTop: 10 + 'px'}}>
-                            <label>Pictures:</label>
-                            <div className='picture-thumb'>
-                                { Pictures }
-                            </div>
-                        </div>
-                        <div className='profile-info-full' style={{marginTop: 10 + 'px', opacity: this.state.addPicture ? '1' : '0'}}>
-                            <div>
-                                <input type='file' onChange={this._fileHandler} />
-                                <button onClick={this._uploadImg}>Upload</button>
-                            </div>
-                        </div>
-                    </div>
-                    {/* <a onclick="return logMeOut();"><p className="logout" id="logout_d">Log out</p></a> */}
-                </div>
-            </div>
-        );
-    }
-}
-
-
-
-class Settings extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            id: false,
-            edit: false,
-            me: false,
-        }
-        this.original = null;
-        this._bootstrapAsync();
-    }
-
-    _bootstrapAsync = async () => {
-        let me = await JSON.parse(localStorage.getItem('user_data'));
-        this.setState({me: me});
-        this.original = me;
-    }
-
-    _logOut = () => {
-        sessionStorage.clear();
-        localStorage.clear();
-        setTimeout(function() {
-            window.location.reload();
-        }, 300);   
-    }
-
-    render() {
-        return (
-            <div>
-                <div id="user-panel">
-                    <div className='profile-info me'>
-                        <div className='profile-info-full top settings'>
-                            <h2>Settings</h2>
-                            <div className='settings-cnt' style={{left: this.state.edit ? -100 + '%' : 0}}>
-                                <div className='settings-option' onClick={() => this.setState({edit: 'public'})}>
-                                    <p>Edit Public Info</p>
-                                    <i className="fas fa-chevron-right"></i>
-                                </div>
-                                <div className='settings-option' onClick={() => this.setState({edit: 'private'})}>
-                                    <p>Edit Private Info</p>
-                                    <i className="fas fa-chevron-right"></i>
-                                </div>
-                                <div className='settings-option' onClick={() => this.setState({edit: 'settings'})}>
-                                    <p>General Settings</p>
-                                    <i className="fas fa-chevron-right"></i>
-                                </div>
-                            </div>
-                            <div className='settings-cnt' style={{left: !this.state.edit ? 100 + '%' : 0}}>
-                                <div className='settings-option-in' onClick={() => this.setState({edit: false})}>
-                                    <i className="fas fa-chevron-left"></i>
-                                    <p>Back</p>
-                                </div>
-                                <div className='settings-option-edit'>
-                                    <p>Name:</p>
-                                    <input type='text' value={this.state.me.first_name} />
-                                </div>
-                                <div className='settings-option-edit' >
-                                    <p>Surname:</p>
-                                    <input type='text' value={this.state.me.last_name} />
-                                </div>
-                                <div className='settings-option-edit' >
-                                    <p>Interests:</p>
-                                    <input type='text' value={this.state.me.tags} />
-                                </div>
-                                <div className='settings-option-edit lg'>
-                                    <p>About:</p>
-                                    <textarea type='text' value={this.state.me.about} />
-                                </div>
-                                <div className='settings-option'>
-                                    <p style={{textAlign: 'center', padding: 0}}>Update Location</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {this.state.edit ? <p className="save" onClick={this._save}>Save</p> : <p className="logout" onClick={this._logOut}>Sign Out</p>}
-                </div>
-            </div>
-        );
-    }
-}
-
-class PopUp extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            notification: this.props.n_open,
-        }
-    }
-
-    render() {
-        let menuItem = null;
-        if (this.props.display === 0) {
-            menuItem = null;
-        } else if (this.props.display === 1) {
-            menuItem = <Chats locked={this.props.locked} conn={this.props.conn} n_open={this.props.n_open} clear={this.props.clear} sockets={this.props.sockets} />
-        } else if (this.props.display === 2) {
-            menuItem = <Profile openImg={this.props.openImg} />
-        } else if (this.props.display === 3) {    
-            menuItem = <Settings />
-        }
-
-        return (
-            <div className='popup' style={{top: this.props.shown ? 150 + 'px' : -100 + 'vh'}}>
-                <i className="fas fa-expand-arrows-alt lock-panel" onClick={this.props.lock}></i>
-                <i className="far fa-minus-square close-panel" onClick={this.props.toggle}></i>
-                {menuItem}
-            </div>
-        )
-    }
-}
-
-const Notification = (props) => {
-    return (
-        <div className='notification'>
-            <img src={ props.data.sender_avatar } alt='' />
-            <h2>{ props.data.sender_name }</h2>
-            <p>{props.data.id && 'Message: '}{ props.data.body }</p>
-            <h3 onClick={ () => props.open({id: props.data.id, mate_id: props.data.myid, name: props.data.sender_name, avatar: props.data.sender_avatar}) }>open</h3>
-            {props.n === 0 && <p className='clear-notifications' onClick={props.clear}>clear</p>}
-        </div>
-    );
-}
-
-const SecretThing = (props) => {
-    return (
-        <img src={require('../img/willy.png')} alt='' className='congrats' />
-    )
-}
+import PictureViewer from '../reusable/pictureViewer';
+import PopUp from '../const/popup';
 
 class Home extends Component {
     constructor(props) {
@@ -324,6 +23,7 @@ class Home extends Component {
         imgViewer: false,
         secret: false,
         trigger: 0,
+        mapView: false,
       }
       this.url = require("../sound/light.mp3");
       this.talala = require("../sound/talala.m4a");
@@ -336,7 +36,6 @@ class Home extends Component {
         this.conn.onmessage = (e) => {
             if (e.data !== 'refresh' && e.data !== 'connected') {
               let data = JSON.parse(e.data);
-              console.log(data);
                 if (data.willy) {
                     let a = new Audio(this.talala);
                     a.play();
@@ -435,13 +134,15 @@ class Home extends Component {
     }
 
     _trigger = () => {
-        if (!this.state.secret && this.state.trigger > 7) {
-            console.log('Hello');
+        if (!this.state.secret && this.state.trigger >= 7) {
             this.conn.send('willy talala');
         } else {
             this.setState({trigger: this.state.trigger + 1});
-        }
-        
+        } 
+    }
+
+    _mapView = () => {
+        this.setState({mapView: !this.state.mapView});
     }
 
     render() {
@@ -457,7 +158,6 @@ class Home extends Component {
         <div className="App">
           <header className="header">
             <h1>MATCHA</h1><i className="far fa-kiss-wink-heart" onClick={this._trigger}></i>
-            {/* <i class="far fa-envelope messages-icon"></i> */}
             <div className="menu mobhide" style={{width: this.state.menu ? 100 + 'vw' : 50 + 'px'}}>
                 <img src={require('../img/menu.png')} className="menu-btn" alt="logo" onClick={() => this.setState({popup: false, menu: !this.state.menu})} />
                 <p onClick={() => this._getMenuItem(3)}>Settings</p>
@@ -470,123 +170,16 @@ class Home extends Component {
             {this.state.imgViewer && <PictureViewer images={this.state.imgViewer.images} view={this.state.imgViewer.key} close={this._closeImageView} delete={this._deleteImg} d={this.state.imgViewer.i} />}
             <PopUp shown={this.state.popup} toggle={this._togglePopup} display={this.state.display} lock={this._lockMenu} locked={this.state.lockMenu} conn={this.conn} n_open={this.state.n_open} clear={this._clearNotification} openImg={this._openImageView} sockets={this._socketInit} />
             <div className='main-view'>
-                {this.state.myid && <Browser myid={this.state.myid} size={ this.state.lockMenu } me={this.state.me} conn={this.conn} openImg={this._openImageView} />}
+                {this.state.myid & !this.state.mapView && <Browser myid={this.state.myid} size={ this.state.lockMenu } me={this.state.me} conn={this.conn} openImg={this._openImageView} mapView={this._mapView} />}
+                {this.state.mapView && <BrowserMap myid={this.state.myid} size={ this.state.lockMenu } me={this.state.me} conn={this.conn} openImg={this._openImageView} mapView={this._mapView} />}
                 <div className='notification-container' style={{right: this.state.lockMenu ? 350 + 'px' : 0}}>
                     { Notifications }
                 </div>
                 {this.state.secret && <SecretThing />}
             </div>
-            
-            {/* <div className="menu-shelf" style={{right: this.state.menuShown ? 0 + 'px' : -450 + 'px'}}>
-                <div className="menuCnt" style={{right: this.state.menuShown ? 0 + 'px' : -450 + 'px'}} >
-        
-                </div>
-            </div> */}
-  
         </div>
         );
     }
 }
-
-class PictureViewer extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            dataSource: [],
-            current: false,
-            infinite: false,
-            light: false,
-        }
-    }
-
-    _bootstrapAsync = async () => {
-        return new Promise(resolve => {
-            this.setState({
-                dataSource: this.props.images,
-                current: this.props.view,
-            })
-            resolve('ok');
-        })
-    }
-
-    async componentDidMount() {
-        await this._bootstrapAsync().then(() => this.setState({visible: true}));
-    }
-
-    _next = () => {
-        if (this.state.current < this.state.dataSource.length - 1) {
-            this.setState({current: this.state.current + 1});
-        } else if (this.state.infinite) {
-            this.setState({current: 0});
-        } else {
-            return ;
-        }
-    }
-
-    _prev = () => {
-        if (this.state.current > 0) {
-            this.setState({current: this.state.current - 1});
-        } else if (this.state.infinite) {
-            this.setState({current: this.state.dataSource.length - 1});
-        } else {
-            return ;
-        }
-    }
-
-    _change = (i) => {
-        this.setState({current: i});
-    }
-
-    _setInfinite = () => {
-        this.setState({infinite: !this.state.infinite});
-    }
-
-    _setTheme = () => {
-        this.setState({light: !this.state.light});
-    }
-
-    render () {
-        let Previews = null;
-        if (this.state.dataSource) {
-            Previews = this.state.dataSource.map((preview, i) => {
-                return <PictureViewerPreview key={ i } src={ preview } n={ i } current={ this.state.current } change={ this._change } infinite={ this.state.infinite } />
-            })
-        }
-        console.log(this.props.d)
-        return (
-            <div className='picture-view' style={{backgroundColor: this.state.light ? '#eee' : 'rgba(29,29,29,1)'}}>
-                <i className="fas fa-chevron-left" onClick={this._prev}></i>
-                <i className="fas fa-chevron-right" onClick={this._next}></i>
-                <i className="fas fa-moon" onClick={this._setTheme}></i>
-                <i className="fas fa-times" onClick={this.props.close}></i>
-                <i className="fas fa-infinity" onClick={this._setInfinite}></i>
-                {this.props.d === 1 && <i className="fas fa-trash" onClick={() => this.props.delete(this.state.current)}></i>}
-                {/* <div className='close-view' onClick={this.props.close} /> */}
-                <div className='view-container'>
-                    <img alt='' src={this.state.dataSource[this.state.current]} />
-                </div>
-                <div className='previews-container'>
-                    <div className='previews'>
-                        { Previews }
-                    </div>
-                </div>
-            </div>
-        );
-    }
-}
-
-const PictureViewerPreview = (props) => {
-    if (props.n === props.current) {
-        return (
-            <img className='preview-img-lg' alt='' src={ props.src } />
-        )
-    } else {
-        return (
-            <img className='preview-img' alt='' src={ props.src } onClick={ () => props.change(props.n) } />
-        )
-    }
-}
-
-
 
 export default Home

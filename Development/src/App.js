@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import LoginScreen from './screens/login';
 import MainScreen from './screens/home';
+import { SETUP } from './backyard/api';
 import './App.css';
 import './styles/cmgr.css';
 
@@ -24,6 +25,10 @@ class App extends Component {
       sessionStorage.setItem('user_data', session);
     }
   }
+
+  // componentDidMount() {
+  //   SETUP()
+  // }
   
   render() {
     if (this.state.loggedIn) {

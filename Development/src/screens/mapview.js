@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import API, { GEO } from '../backyard/api';
+import API from '../backyard/api';
 import { PersonBubbleMap } from '../const/bubbles';
 import { ProfilePreview } from '../const/profiles';
 

@@ -2,6 +2,168 @@ import React, { Component } from 'react';
 import API, { GEO } from '../backyard/api';
 import { TagBubbleConst, PictureThumb } from '../const/bubbles';
 
+export class Profile extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            id: false,
+            info: false,
+            city: false,
+            picture: null,
+            addPicture: false,
+            changeProfilePic: false,
+            avatar: false,
+            img: false,
+        }
+        this._bootstrapAsync();
+    }
+    
+    _bootstrapAsync = async () => {
+        let data = await JSON.parse(localStorage.getItem('user_data'));
+        this._getImages(data.id);
+        GEO().then((res) => this.setState({city: res}));
+        this.setState({info: data});
+    }
+
+    _getImages = (id) => {
+        API('getImages', {id: id}).then((res) => {
+            if (res.data) {
+                this.setState({img: res.data.split(' ')});
+            }
+            if (res.avatar) {
+                this.setState({avatar: res.avatar});
+            }
+        });
+    }
+    
+    _getAge(d) {
+        var dD = new Date(d);
+        var aD = Date.now() - dD.getTime();
+        var aT = new Date(aD);
+        return Math.abs(aT.getUTCFullYear() - 1970);
+    }
+
+    componentWillMount() {
+        
+    }
+
+    componentDidUpdate() {
+    }
+
+    _addPicture = () => {
+        this.setState({addPicture: true})
+    }
+
+    _fileHandler = (e) => {
+        this._prepareImg(e.target.files[0]);
+    }
+
+    _prepareImg = (picture) => {
+        let reader = new FileReader();
+        reader.readAsDataURL(picture);
+        reader.onload = (e) => {
+            this.setState({picture: e.target.result})
+        };
+    }
+
+    _uploadImg = () => {
+        API('imgUpload', {picture: this.state.picture, id: this.state.info.id}).then((res) => {
+            if (res.data) {
+                this._getImages(this.state.info.id);
+            } else {
+                alert('Oops, error on the server side. PLease, try again a bit later');
+            }
+        }).then(() => setTimeout(() => this.setState({addPicture: false, updated: true}), 500));
+    }
+
+    _changeProfilePic = (i) => {
+        if (i >= 0) {
+            API('updateProfilePic', {id: this.state.info.id, avatar: this.state.img[i]}).then((res) => {
+                if (res.ok) {
+                    this._getImages(this.state.info.id);
+                } else {
+                    alert('Oops, error on the server side. PLease, try again a bit later');
+                }
+            })
+            this.setState({changeProfilePic: false});
+        } else {
+            this.setState({changeProfilePic: !this.state.changeProfilePic});
+        }
+    }
+
+    render() {
+        let Tags = null;
+        let Pictures = null;
+        if (this.state.info.tags) {
+            let array = this.state.info.tags.split(' ');
+            Tags = array.map((tag, i) => {
+                return <TagBubbleConst text={tag} key={ i } delete={this._deleteTag} />
+            })
+        }
+
+        if (this.state.img) {
+            Pictures = this.state.img.map((pic, i) => {
+                return <PictureThumb pic={ pic } all={ this.state.img } key={ i } n={ i } open={ this.state.changeProfilePic ? () => this._changeProfilePic(i) : this.props.openImg } my={ true } />
+            });
+            if (this.state.img.length < 5) {
+                Pictures.push(<PictureThumb add={ this._addPicture } key={ 'add-a-picture-button' } /> );
+            }
+        } else {
+            Pictures = <PictureThumb add={ this._addPicture } /> 
+        }
+
+        return (
+            <div>
+                <div id="user-panel">
+                    <img id="user-avatar" onClick={() => this._changeProfilePic(-42)} src={this.state.avatar ? this.state.avatar : require('../img/avatar.png')} alt='' />
+                    {/* <p className="info likes">Affection</p>
+                    <p className="counter likes">253</p>
+                    <p className="info posts">Matches</p>
+                    <p className="counter posts">121</p> */}
+                    <div className='profile-info me'>
+                        <div className='profile-info-full top'>
+                            <h2>{ this.state.info.first_name }</h2>
+                            <p>{this.state.changeProfilePic ? 'To update your profile picture, select it from the ones available below. Or use the pluss button to upload something new.' : this.state.city + ', ' + this._getAge(this.state.info.dob) + ' y.o.'}</p>
+                        </div>
+                        <div className='profile-info-half'>
+                            <label>Gender:</label>
+                            <p>{ this.state.info.gender === 'M' ? "Male" : "Female" }</p>
+                        </div>
+                        <div className='profile-info-half'>
+                            <label>Looking for:</label>
+                            <p>{ this.state.info.seeking === 'm' ? "Men" : this.state.info.seeking === 'f' ? "Women" : "Both" }</p>
+                        </div>
+                        <div className='profile-info-full'>
+                            <label>Interested in:</label>
+                            {/* <p>{ this.state.info.tags }</p> */}
+                            <div className='tags-cnt'>
+                                { Tags }
+                            </div>
+                        </div>
+                        <div className='profile-info-full' style={{marginTop: 10 + 'px'}}>
+                            <label>About me:</label>
+                            <p>{ this.state.info.about }</p>
+                        </div>
+                        <div className='profile-info-full' style={{marginTop: 10 + 'px'}}>
+                            <label>Pictures:</label>
+                            <div className='picture-thumb'>
+                                { Pictures }
+                            </div>
+                        </div>
+                        <div className='profile-info-full' style={{marginTop: 10 + 'px', opacity: this.state.addPicture ? '1' : '0'}}>
+                            <div>
+                                <input type='file' onChange={this._fileHandler} />
+                                <button onClick={this._uploadImg}>Upload</button>
+                            </div>
+                        </div>
+                    </div>
+                    {/* <a onclick="return logMeOut();"><p className="logout" id="logout_d">Log out</p></a> */}
+                </div>
+            </div>
+        );
+    }
+}
+
 export class ProfilePreview extends Component {
     constructor(props) {
         super(props);
@@ -151,10 +313,6 @@ export class ProfilePreview extends Component {
                         <img className='paper-clip' src={require('../img/clip.png')} alt='' />
                         <p className='fame'>Fame: {this.props.info.fame}</p>
                         <img id="user-avatar-lg" src={this.props.info.avatar ? this.props.info.avatar : require('../img/avatar.png')} alt='' />
-                        {/* <p className="info likes">Affection</p>
-                        <p className="counter likes">253</p>
-                        <p className="info posts">Matches</p>
-                        <p className="counter posts">121</p> */}
                         <div className='profile-info-half pictures-half' style={{marginTop: 10 + 'px'}}>
                             <div className='picture-thumb'>
                                 { Pictures }
@@ -191,7 +349,6 @@ export class ProfilePreview extends Component {
                             {/* <i className={ this.state.matched ? "far fa-comment blue" : "far fa-comment" }></i> */}
                             <i className="far fa-times-circle red" onClick={this._block}></i>
                         </div>
-                        {/* <a onclick="return logMeOut();"><p className="logout" id="logout_d">Log out</p></a> */}
                     </div>
                 </div>
             );

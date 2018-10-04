@@ -7,6 +7,8 @@ $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $post = json_decode(file_get_contents('php://input'), true);
 
 $methods = array(
+    'setup' => 'setup',
+    'getInfo' => 'getInfo',
     'countUsers' => 'countUsers',
     'getUsers' => 'getUsers',
     'geoSort' => 'geoSort',
@@ -27,6 +29,13 @@ $methods = array(
     'imgUpload' => 'imgUpload',
     'imgDelete' => 'imgDelete',
     'updateProfilePic' => 'updateProfilePic',
+    'updateLocation' => 'updateLocation',
+    'editPublic' => 'editPublic',
+    'editPrivate' => 'editPrivate',
+    'editPassword' => 'editPassword',
+    'restorePassword' => 'restorePassword',
+    'registration' => 'registration',
+    'tokenConfirm' => 'tokenConfirm'
 );
 
 $function = $post['method'];
