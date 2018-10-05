@@ -40,6 +40,24 @@ export function GEO(coords) {
     });
 }
 
+export function reverseGEO(str) {
+    let query = 'https://us1.locationiq.com/v1/search.php?key=edf49c52a11d0d&q=' + str + '&format=json';
+
+    console.log(query);
+    return new Promise((resolve, reject) => {
+        fetch(query, {
+            method: 'POST',
+        })   
+        .then((response) => response.json())
+        .then((res) => {
+            resolve(res);
+        })
+        .catch((error) => {
+            reject(error);
+        });
+    });
+}
+
 export function SETUP() {
     let BaseURL = 'https://randomuser.me/api/?';
     let options = 'gender=m&inc=picture&results=550';

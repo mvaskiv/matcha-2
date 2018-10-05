@@ -55,10 +55,10 @@ function geoSort($post) {
     "SELECT
         *, (
         6371 * acos (
-        cos ( radians('50.468006') )
+        cos ( radians( ? ) )
         * cos( radians( latitude ) )
-        * cos( radians( longitude ) - radians('30.464214') )
-        + sin ( radians('50.468006') )
+        * cos( radians( longitude ) - radians( ? ) )
+        + sin ( radians( ? ) )
         * sin( radians( latitude ) )
         )
     ) AS distance,
@@ -75,9 +75,18 @@ function geoSort($post) {
     ORDER BY fame DESC, distance ASC
     LIMIT " . $post['n'] . ", 35;"
     );
-    $stmt->execute();
+    $stmt->execute([
+        floatval($post['lat']),
+        floatval($post['lon']),
+        floatval($post['lat']),
+    ]);
     $result = $stmt->fetchAll();
-
+    if (!$result[0]) {
+        return json_encode(array(
+            'data' => $result,
+            'end' => true,
+        ));
+    }
     // for($i = 0; $i < count($result); $i++) {
     //     $result[$i]["1"] = htmlspecialchars($result[$i]["1"]);
     //     $result[$i]["2"] = htmlspecialchars($result[$i]["2"]);
@@ -108,6 +117,7 @@ function likeNmatch($post) {
   
     if ($result) {
         return json_encode(array(
+            'data' => $result,
             'ok' => true,
         ));
     } else {
@@ -195,7 +205,6 @@ function chat_init($post) {
         $post['myid'],
     ]);
     $pass = $check->fetch();
-    
     if ($pass) {
         return json_encode(array(
             'ok' => true,
@@ -203,7 +212,7 @@ function chat_init($post) {
         ));
     } else {
         $stmt = $GLOBALS['conn']->prepare(
-            "INSERT INTO `chats` (`initiator`, `responder`, `avatar_one`, `avatar_two`, `initiator_name`, `responder_name`) values (?, ?, ?, ?, ?, ?);"
+            "INSERT INTO `chats` (`initiator`, `responder`, `avatar_one`, `avatar_two`, `initiator_name`, `responder_name`, `last_msg`) values (?, ?, ?, ?, ?, ?, ?);"
         );
         $stmt->execute([
             $post['myid'],
@@ -212,7 +221,12 @@ function chat_init($post) {
             $post['mate_avatar'],
             $post['my_name'],
             $post['mate_firstname'],
+            "No messages yet"
         ]);
+        return json_encode(array(
+            'ok' => false,
+            'id' => $post,
+        ));
         if ($stmt) {
             return json_encode(array(
                 'ok' => true,
@@ -463,6 +477,8 @@ function imgUpload($post) {
     $result = $stmt->fetch();
     if ($result[0]) {
        $string = trim($result[0]) . ' ' . '/pictures/' . $rand . '.png';
+    } else {
+        $string = '/pictures/' . $rand . '.png';
     }
     $stmt_one = $GLOBALS['conn']->prepare(
         "UPDATE `users` SET pictures = ? WHERE `id` = ? ;"
@@ -678,8 +694,9 @@ function registration($post) { // DONE, need check
             'error' => 'Bad login or email'
         ));
     }
+    $passhash = hash('Whirlpool', $post['password']);
     $stmt= $GLOBALS['conn']->prepare(
-        "INSERT INTO `users` (`email`, `login`, `gender`, `seeking`, `dob`, `token`) values (?, ?, ?, ?, ?, ?);"
+        "INSERT INTO `users` (`email`, `login`, `gender`, `seeking`, `dob`, `first_name`, `last_name`, `tags`, `about`, `password`, `latitude`, `longitude`, `token`) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
     );
     $newtoken = hash('whirlpool', htmlspecialchars($post['email']) . htmlspecialchars($post['login']) . time());
     $res = $stmt->execute([
@@ -688,6 +705,13 @@ function registration($post) { // DONE, need check
         htmlspecialchars($post['gender']),
         htmlspecialchars($post['seeking']),
         $post['dob'],
+        htmlspecialchars($post['first_name']),
+        htmlspecialchars($post['last_name']),
+        htmlspecialchars(trim($post['tags'])),
+        htmlspecialchars($post['about']),
+        $passhash,
+        $post['latitude'],
+        $post['longitude'],
         $newtoken,
     ]);
     if ($res) {
@@ -727,6 +751,13 @@ function tokenConfirm($post) {
     ]);
     $res = $stmt->fetch();
     if ($res) {
+        $stmt= $GLOBALS['conn']->prepare(
+            "UPDATE `users` SET `status` = 1 WHERE email = ?  AND `token` = ? ;"
+        );
+        $stmt->execute([
+            $post['email'],
+            $post['token'],
+        ]);
         $toemail = array(
             'type' => 'tokenConfirm',
             'login' => $res['login'],
@@ -757,7 +788,7 @@ function sendEmail($post) {
     //    id, type (like, unlike, match, block, message, token)
     if ($post['type'] === 'registration') {
         include_once 'email-registration.php';
-        $message = emailcreate($post['login'], "http://localhost:3000/token/".$post['tokenurl']."/");
+        $message = emailcreate($post['login'], "http://localhost:3000/token/".$post['tokenurl']."/email/".$post['email']);
         $subject = "MATCHA: Confirm your account";
 
     } else if ($post['type'] === 'restorePassword') {

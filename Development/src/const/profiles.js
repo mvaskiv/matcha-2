@@ -22,7 +22,7 @@ export class Profile extends Component {
         let data = await JSON.parse(localStorage.getItem('user_data'));
         this._getImages(data.id);
         GEO().then((res) => this.setState({city: res}));
-        this.setState({info: data});
+        this.setState({info: data, id: data.id});
     }
 
     _getImages = (id) => {
@@ -69,6 +69,10 @@ export class Profile extends Component {
     _uploadImg = () => {
         API('imgUpload', {picture: this.state.picture, id: this.state.info.id}).then((res) => {
             if (res.data) {
+                API('getInfo', {id: this.state.id}).then((res) => {
+                    sessionStorage.setItem('user_data', JSON.stringify(res.data));
+                    localStorage.setItem('user_data', JSON.stringify(res.data));
+                })
                 this._getImages(this.state.info.id);
             } else {
                 alert('Oops, error on the server side. PLease, try again a bit later');
@@ -80,6 +84,11 @@ export class Profile extends Component {
         if (i >= 0) {
             API('updateProfilePic', {id: this.state.info.id, avatar: this.state.img[i]}).then((res) => {
                 if (res.ok) {
+                    API('getInfo', {id: this.state.id}).then((res) => {
+                        sessionStorage.setItem('user_data', JSON.stringify(res.data));
+                        localStorage.setItem('user_data', JSON.stringify(res.data));
+                        alert('Your location has been successfully updated.');
+                    })
                     this._getImages(this.state.info.id);
                 } else {
                     alert('Oops, error on the server side. PLease, try again a bit later');
@@ -224,30 +233,34 @@ export class ProfilePreview extends Component {
     }
 
     _like = () => {
-        let post = {
-            myid: this.props.me.id,
-            mate: this.props.info.id,
-        };
-        API('like', post).then((res) => {
-            if (res.ok) {
-                if (res.ok === 'match') {
-                    alert('Congratulation, you liked each other and can now chat with ' + this.props.info.first_name);
-                    this._push("You have a match!");
-                } else if (res.ok !== 'duplicate') {
-                    this.setState({liked: true});
-                    this._push('Liked you!');
-                } else if (res.ok === 'duplicate') {
-                    API('unlike', post).then((res) => {
-                        if (res.ok) {
-                            alert('You unliked ' + this.props.info.first_name);
-                            this._push('Uniked you!');
-                        }
-                    });
+        if (this.props.me.pictures) {
+            let post = {
+                myid: this.props.me.id,
+                mate: this.props.info.id,
+            };
+            API('like', post).then((res) => {
+                if (res.ok) {
+                    if (res.ok === 'match') {
+                        alert('Congratulation, you liked each other and can now chat with ' + this.props.info.first_name);
+                        this._push("You have a match!");
+                    } else if (res.ok !== 'duplicate') {
+                        this.setState({liked: true});
+                        this._push('Liked you!');
+                    } else if (res.ok === 'duplicate') {
+                        API('unlike', post).then((res) => {
+                            if (res.ok) {
+                                alert('You unliked ' + this.props.info.first_name);
+                                this._push('Uniked you!');
+                            }
+                        });
+                    }
+                } else if (!res.ok) {
+                    alert('Oops, error on the server side. Please, try again later');
                 }
-            } else if (!res.ok) {
-                alert('Oops, error on the server side. Please, try again later');
-            }
-        })
+            })
+        } else {
+            alert('You need to upload at least one picture to interact with others.');
+        }
     }
 
     _block = async () => {

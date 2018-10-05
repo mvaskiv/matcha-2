@@ -49,7 +49,7 @@ export default class Chats extends Component {
         let data = {
             myid: this.state.id,
             mate: chat.mate_id,
-            mate_avatar: chat.mate_avatar,
+            mate_avatar: chat.avatar,
             my_avatar: this.state.me.avatar,
             my_name: this.state.me.first_name,
             mate_firstname: chat.name,

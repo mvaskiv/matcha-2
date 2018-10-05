@@ -51,7 +51,11 @@ class Settings extends Component {
         let lon = await position.coords.longitude;
         API('updateLocation', {id: this.state.id, lat: lat, lon: lon}).then((res) => {
             if (res.ok) {
-                alert('Your location has been successfully updated.');
+                API('getInfo', {id: this.state.id}).then((res) => {
+                    sessionStorage.setItem('user_data', JSON.stringify(res.data));
+                    localStorage.setItem('user_data', JSON.stringify(res.data));
+                    alert('Your location has been successfully updated.');
+                })
             } else {
                 alert('Error. Please enable location services and try again in a few moments.');
             }

@@ -52,18 +52,18 @@ services:
   #     ES_JAVA_OPTS: "-Xmx256m -Xms256m"
   #   networks:
   #     - matcha
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: 'matcha-phpmyadmin'
-    links:
-      - mysql
-    environment:
-      PMA_HOST: mysql
-      PMA_PORT: 3306
-    ports:
-      - '8080:80'
-    volumes: 
-      - /sessions
+  # phpmyadmin:
+  #   image: phpmyadmin/phpmyadmin
+  #   container_name: 'matcha-phpmyadmin'
+  #   links:
+  #     - mysql
+  #   environment:
+  #     PMA_HOST: mysql
+  #     PMA_PORT: 3306
+  #   ports:
+  #     - '8080:80'
+  #   volumes: 
+  #     - /sessions
     
 # networks:
 #   matcha:

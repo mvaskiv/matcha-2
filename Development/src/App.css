@@ -73,7 +73,9 @@ body, html {
 .menu-btn {
   position: absolute;
   left: 0px;
-  top: 25px;
+  top: 0px;
+  padding-bottom: 30px;
+  padding-top: 25px; 
   /* filter: invert(11%); */
   height: 35px;
   cursor: pointer;
@@ -282,7 +284,10 @@ body, html {
   border-radius: 5px;
   height: 20px;
   border-width: 0.5px;
+  border-color: #ccc;
 }
+
+
 
 .login-form-sm {
   position: absolute;
@@ -680,6 +685,10 @@ body, html {
   top: 5px;
   left: 15px;
   color: #333;
+  -webkit-user-select: none; 
+  -moz-user-select: none;   
+  -ms-user-select: none; 
+  user-select: none;   
 }
 
 .header .fa-kiss-wink-heart {
@@ -886,4 +895,22 @@ body, html {
 	text-align: center;
   cursor: pointer;
   color: #197fd8;
+}
+
+
+.forgot-pass {
+  position: absolute;
+  bottom: 33px;
+  left: 30px;
+  color: #197fd8;
+  font-weight: 100;
+  cursor: pointer;
+}
+
+.login-form .settings-option-edit.lg p {
+  padding-left: 3px;
+}
+.login-form .settings-option-edit.lg textarea {
+  padding-top: 5px;
+  padding-left: 10px;
 }

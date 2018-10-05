@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import LoginScreen from './screens/login';
 import MainScreen from './screens/home';
-import { SETUP } from './backyard/api';
+import API, { SETUP } from './backyard/api';
 import './App.css';
 import './styles/cmgr.css';
 
@@ -26,9 +26,18 @@ class App extends Component {
     }
   }
 
-  // componentDidMount() {
-  //   SETUP()
-  // }
+  componentDidMount() {
+    if (window.location.pathname.includes('/token/')) {
+      let arr = window.location.pathname.split('/');
+      API('tokenConfirm', {token: arr[2], email: arr[4]}).then((res) => {
+        if (res.ok) {
+          alert('Congratulations, your email is confirmed, now you can log in');
+        }
+      })
+      console.log(arr);
+    }
+   
+  }
   
   render() {
     if (this.state.loggedIn) {

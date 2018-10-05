@@ -54,20 +54,22 @@ export default class Browser extends Component {
     }
 
     _bootstrapAsync = async () => {
-        console.log('asd');
         let state = await this.state;
+        state.lat = await this.props.me.latitude;
+        state.lon = await this.props.me.longitude;
         state.n = 0;
         state.seeking = this.state.seeking ? this.state.seeking : this.props.me.seeking === 'f' ? 'm' : this.props.me.seeking === 'b' ? 'b' : 'f';
         state.gender = this.state.gender ? this.state.gender : this.props.me.seeking === 'f' ? 'f' : this.props.me.seeking === 'b' ? 'b' : 'm';
         this.setState({gender: state.gender});
         API('geoSort', state).then((res) => {
             if (res.data) {
+                console.log(this.state);
                 this._setDataSource(res.data, 0);
                 // this.setState({dataSource: res.data});
-                this.setState({n: this.state.n + 35});
+                this.setState({n: 35});
                 if (res.end) {
                     this.setState({complete: true});
-                    this.users.removeEventListener('scroll', this._infinityScroll);
+                    this.users.removeEventListener('scroll', this._scrollListener);
                 }
             }
         }).then(() => {
@@ -101,7 +103,7 @@ export default class Browser extends Component {
     }
 
     componentWillUnmount() {
-        window.removeEventListener('scroll', this._onScroll, false);
+        window.removeEventListener('scroll', this._scrollListener, false);
     }
 
     _scrollListener = () => {
@@ -118,7 +120,7 @@ export default class Browser extends Component {
                 this.setState({n: this.state.n + 35});
                 if (res.end) {
                     this.setState({complete: true});
-                    this.users.removeEventListener('scroll', this._infinityScroll);
+                    this.users.removeEventListener('scroll', this._scrollListener);
                 }
             }
         });

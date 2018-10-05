@@ -56,10 +56,8 @@ class Home extends Component {
 
     async componentDidMount() {
         let data = await JSON.parse(localStorage.getItem('user_data'));
-       
         this.setState({myid: data.id});
         this.setState({me: data});
-        console.log(this.state.me.id);
         this.conn.onopen = (e) => {
             this.conn.send(data.id + ' in app');
             window.addEventListener('beforeunload', () => this.conn.send(this.state.myid + ' out'));
@@ -172,7 +170,7 @@ class Home extends Component {
             {this.state.imgViewer && <PictureViewer images={this.state.imgViewer.images} view={this.state.imgViewer.key} close={this._closeImageView} delete={this._deleteImg} d={this.state.imgViewer.i} />}
             <PopUp shown={this.state.popup} toggle={this._togglePopup} display={this.state.display} lock={this._lockMenu} locked={this.state.lockMenu} conn={this.conn} n_open={this.state.n_open} clear={this._clearNotification} openImg={this._openImageView} sockets={this._socketInit} />
             <div className='main-view'>
-                {this.state.me.id && <Browser myid={this.state.myid} size={ this.state.lockMenu } me={this.state.me} conn={this.conn} openImg={this._openImageView} mapView={this._mapView} />}
+                {this.state.myid && <Browser myid={this.state.myid} size={ this.state.lockMenu } me={this.state.me} conn={this.conn} openImg={this._openImageView} mapView={this._mapView} />}
                 {/* {this.state.mapView && <BrowserMap myid={this.state.myid} size={ this.state.lockMenu } me={this.state.me} conn={this.conn} openImg={this._openImageView} mapView={this._mapView} />} */}
                 <div className='notification-container' style={{right: this.state.lockMenu ? 350 + 'px' : 0}}>
                     { Notifications }
