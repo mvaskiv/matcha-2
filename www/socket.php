@@ -11,36 +11,34 @@ if (!$socket) {
 
 $connects = array();
 while (true) {
-    //формируем массив прослушиваемых сокетов:
     $read = $connects;
     $read []= $socket;
     $write = $except = null;
 
-    if (!stream_select($read, $write, $except, null)) {//ожидаем сокеты доступные для чтения (без таймаута)
+    if (!stream_select($read, $write, $except, null)) {
         break;
     }
 
-    if (in_array($socket, $read)) {//есть новое соединение
-        //принимаем новое соединение и производим рукопожатие:
+    if (in_array($socket, $read)) {
         if (($connect = stream_socket_accept($socket, -1)) && $info = handshake($connect)) {
-            // type $connect;
-            $connects[] = $connect;//добавляем его в список необходимых для обработки
-            onOpen($connect, $info);//вызываем пользовательский сценарий
+     
+            $connects[] = $connect;
+            onOpen($connect, $info);
         }
         unset($read[ array_search($socket, $read) ]);
     }
 
-    foreach($read as $connect) {//обрабатываем все соединения
+    foreach($read as $connect) {
         $data = fread($connect, 100000);
 
-        if (!$data) { //соединение было закрыто
+        if (!$data) {
             fclose($connect);
             unset($connects[ array_search($connect, $connects) ]);
-            onClose($connect);//вызываем пользовательский сценарий
+            onClose($connect);
             continue;
         }
 
-        onMessage($connect, $data);//вызываем пользовательский сценарий
+        onMessage($connect, $data);
     }
 }
 
@@ -54,7 +52,6 @@ function handshake($connect) {
     $info['method'] = $header[0];
     $info['uri'] = $header[1];
 
-    //считываем заголовки из соединения
     while ($line = rtrim(fgets($connect))) {
         if (preg_match('/\A(\S+): (.*)\z/', $line, $matches)) {
             $info[$matches[1]] = $matches[2];
@@ -63,7 +60,7 @@ function handshake($connect) {
         }
     }
 
-    $address = explode(':', stream_socket_get_name($connect, true)); //получаем адрес клиента
+    $address = explode(':', stream_socket_get_name($connect, true));
     $info['ip'] = $address[0];
     $info['port'] = $address[1];
 
@@ -71,7 +68,6 @@ function handshake($connect) {
         return false;
     }
 
-    //отправляем заголовок согласно протоколу вебсокета
     $SecWebSocketAccept = base64_encode(pack('H*', sha1($info['Sec-WebSocket-Key'] . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')));
     $upgrade = "HTTP/1.1 101 Web Socket Protocol Handshake\r\n" .
         "Upgrade: websocket\r\n" .
@@ -89,34 +85,28 @@ function encode($payload, $type = 'text', $masked = false)
 
     switch ($type) {
         case 'text':
-            // first byte indicates FIN, Text-Frame (10000001):
             $frameHead[0] = 129;
             break;
 
         case 'close':
-            // first byte indicates FIN, Close Frame(10001000):
             $frameHead[0] = 136;
             break;
 
         case 'ping':
-            // first byte indicates FIN, Ping frame (10001001):
             $frameHead[0] = 137;
             break;
 
         case 'pong':
-            // first byte indicates FIN, Pong frame (10001010):
             $frameHead[0] = 138;
             break;
     }
 
-    // set mask and payload length (using 1, 3 or 9 bytes)
     if ($payloadLength > 65535) {
         $payloadLengthBin = str_split(sprintf('%064b', $payloadLength), 8);
         $frameHead[1] = ($masked === true) ? 255 : 127;
         for ($i = 0; $i < 8; $i++) {
             $frameHead[$i + 2] = bindec($payloadLengthBin[$i]);
         }
-        // most significant bit MUST be 0
         if ($frameHead[2] > 127) {
             return array('type' => '', 'payload' => '', 'error' => 'frame too large (1004)');
         }
@@ -129,12 +119,10 @@ function encode($payload, $type = 'text', $masked = false)
         $frameHead[1] = ($masked === true) ? $payloadLength + 128 : $payloadLength;
     }
 
-    // convert frame-head to string:
     foreach (array_keys($frameHead) as $i) {
         $frameHead[$i] = chr($frameHead[$i]);
     }
     if ($masked === true) {
-        // generate a random mask:
         $mask = array();
         for ($i = 0; $i < 4; $i++) {
             $mask[$i] = chr(rand(0, 255));
@@ -144,7 +132,6 @@ function encode($payload, $type = 'text', $masked = false)
     }
     $frame = implode('', $frameHead);
 
-    // append payload to frame:
     for ($i = 0; $i < $payloadLength; $i++) {
         $frame .= ($masked === true) ? $payload[$i] ^ $mask[$i % 4] : $payload[$i];
     }
@@ -157,20 +144,17 @@ function decode($data)
     $unmaskedPayload = '';
     $decodedData = array();
 
-    // estimate frame type:
     $firstByteBinary = sprintf('%08b', ord($data[0]));
     $secondByteBinary = sprintf('%08b', ord($data[1]));
     $opcode = bindec(substr($firstByteBinary, 4, 4));
     $isMasked = ($secondByteBinary[0] == '1') ? true : false;
     $payloadLength = ord($data[1]) & 127;
 
-    // unmasked frame is received:
     if (!$isMasked) {
         return array('type' => '', 'payload' => '', 'error' => 'protocol error (1002)');
     }
 
     switch ($opcode) {
-        // text frame:
         case 1:
             $decodedData['type'] = 'text';
             break;
@@ -179,17 +163,14 @@ function decode($data)
             $decodedData['type'] = 'binary';
             break;
 
-        // connection close frame:
         case 8:
             $decodedData['type'] = 'close';
             break;
 
-        // ping frame:
         case 9:
             $decodedData['type'] = 'ping';
             break;
 
-        // pong frame:
         case 10:
             $decodedData['type'] = 'pong';
             break;
@@ -217,11 +198,6 @@ function decode($data)
         $dataLength = $payloadLength + $payloadOffset;
     }
 
-    /**
-     * We have to check for large frames here. socket_recv cuts at 1024 bytes
-     * so if websocket-frame is > 1024 bytes we have to wait until whole
-     * data is transferd.
-     */
     if (strlen($data) < $dataLength) {
         return false;
     }
@@ -241,8 +217,6 @@ function decode($data)
 
     return $decodedData;
 }
-
-//пользовательские сценарии:
 
 function onOpen($connect, $info) {
     echo "open\n";

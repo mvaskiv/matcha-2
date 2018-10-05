@@ -63,7 +63,6 @@ export default class Browser extends Component {
         this.setState({gender: state.gender});
         API('geoSort', state).then((res) => {
             if (res.data) {
-                console.log(this.state);
                 this._setDataSource(res.data, 0);
                 // this.setState({dataSource: res.data});
                 this.setState({n: 35});
@@ -113,7 +112,6 @@ export default class Browser extends Component {
     }
 
     _onScroll = () => {
-        console.log(this.state.n)
         API('geoSort', this.state).then((res) => {
             if (res) {
                 this._setDataSource(res.data, 1);

@@ -34,7 +34,6 @@ class App extends Component {
           alert('Congratulations, your email is confirmed, now you can log in');
         }
       })
-      console.log(arr);
     }
    
   }

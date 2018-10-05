@@ -1,7 +1,0 @@
-1. editPublicUserInfo -> first_name, last_name, latitude, longitude, tags, about
-2. editPrivateUserInfo -> email, login, gender, seeking, dob
-3. editPassword -> password
-4. restorePassword -> email, dob
-5. registration -> email, login, gender, seeking, dob -> send confirmation email
-6. tokenConfirm -> email, token -> true/false
-7. sendEmail -> id, type (like, unlike, match, block, message, token)

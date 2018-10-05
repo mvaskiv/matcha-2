@@ -225,7 +225,8 @@ function chat_init($post) {
         ]);
         return json_encode(array(
             'ok' => false,
-            'id' => $post,
+            'id' => $GLOBALS['conn']->lastInsertId(),
+            // 'id' => $post,
         ));
         if ($stmt) {
             return json_encode(array(
@@ -646,18 +647,25 @@ function editPassword($post) { // DONE, need check
 
 function restorePassword($post) {
     //   email, dob
+    
+    include_once './generator.php';
+
+    $pass = generateNewPassword();
+   
+    $newpassw = hash('whirlpool', $pass);
     $stmt= $GLOBALS['conn']->prepare(
-        "SELECT id FROM `users` WHERE email = ?  AND `dob` = ? ;"
+        "UPDATE `users` SET `password` = ? WHERE `email` = ?  AND `dob` = ? ;"
     );
-    $stmt->execute([
+    $res = $stmt->execute([
+        $newpassw,
         $post['email'],
         $post['dob'],
     ]);
-    $res = $stmt->fetch();
     if ($res) {
         $toemail = array(
+            'login' => $pass,
+            'host' => $post['host'],
             'type' => 'restorePassword',
-            'login' => htmlspecialchars($post['login']),
             'email' => htmlspecialchars($post['email']),
         );
         $check = sendEmail($toemail);
@@ -716,6 +724,7 @@ function registration($post) { // DONE, need check
     ]);
     if ($res) {
         $toemail = array(
+            'host' => $post['host'],
             'type' => 'registration',
             'login' => htmlspecialchars($post['login']),
             'email' => htmlspecialchars($post['email']),
@@ -759,6 +768,7 @@ function tokenConfirm($post) {
             $post['token'],
         ]);
         $toemail = array(
+            'host' => $post['host'],
             'type' => 'tokenConfirm',
             'login' => $res['login'],
             'email' => htmlspecialchars($post['email']),
@@ -788,17 +798,17 @@ function sendEmail($post) {
     //    id, type (like, unlike, match, block, message, token)
     if ($post['type'] === 'registration') {
         include_once 'email-registration.php';
-        $message = emailcreate($post['login'], "http://localhost:3000/token/".$post['tokenurl']."/email/".$post['email']);
+        $message = emailcreate($post['login'], "http://".$post['host'].":3000/token/".$post['tokenurl']."/email/".$post['email']);
         $subject = "MATCHA: Confirm your account";
 
     } else if ($post['type'] === 'restorePassword') {
         include_once 'email-restore.php';
-        $message = emailcreate($post['login'], "http://localhost:3000/");
+        $message = emailcreate($post['login'], "http://".$post['host'].":3000/");
         $subject = "MATCHA: Restore password";
 
     } else if ($post['type'] === 'tokenConfirm') {
         include_once 'email-confirm.php';
-        $message = emailcreate($post['login'], "http://localhost:3000/");
+        $message = emailcreate($post['login'], "http://".$post['host'].":3000/");
         $subject = "MATCHA: Account confirmed!";
 
     }

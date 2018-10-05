@@ -46,6 +46,7 @@ export default class Chats extends Component {
     }
 
     _setChatId = (chat) => {
+        let chat_to_be = chat;
         let data = {
             myid: this.state.id,
             mate: chat.mate_id,
@@ -55,15 +56,11 @@ export default class Chats extends Component {
             mate_firstname: chat.name,
         }
         API('chat_init', data).then((res) => {
-            if (res.ok) {
-                chat.id = res.id
-                chat.chat = res.id;
-            } else {
-
-            }
+            chat_to_be.id = res.id
+            chat_to_be.chat = res.id;
         }).then(() => {
-            this.setState({chat: chat});
-            setTimeout(() => this.setState({chatOpen: true}), 100);
+            setTimeout(() => this.setState({chat: chat_to_be}));
+            setTimeout(() => this.setState({chatOpen: true}), 150);
         })
     }
 

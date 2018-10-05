@@ -87,7 +87,7 @@ export class Profile extends Component {
                     API('getInfo', {id: this.state.id}).then((res) => {
                         sessionStorage.setItem('user_data', JSON.stringify(res.data));
                         localStorage.setItem('user_data', JSON.stringify(res.data));
-                        alert('Your location has been successfully updated.');
+                        alert('Updated.');
                     })
                     this._getImages(this.state.info.id);
                 } else {

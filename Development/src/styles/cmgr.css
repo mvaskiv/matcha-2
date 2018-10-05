@@ -1041,7 +1041,8 @@ p.counter.posts {
     .menu-btn {
         position: absolute;
         left: 0px;
-        top: 17px;
+        margin: 0;
+        padding-top: 17px;
         padding-bottom: 10px;
         padding-right: 10px;
         background-color: #fff;

@@ -1,0 +1,1 @@
+cat ./db.sql | docker exec -i matcha-mysql /usr/bin/mysql -u root --password=matcha matcha

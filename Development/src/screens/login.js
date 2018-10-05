@@ -102,7 +102,7 @@ class RegisterForm extends Component {
             })
           })
         });
-        this.setState({part: true, alert: false});
+        this.setState({part: true, alert: false, host: window.location.hostname});
       } else if (this._validationSecond()) {
         API('registration', this.state).then((res) => {
           if (res.ok) {
@@ -113,7 +113,6 @@ class RegisterForm extends Component {
             alert('An Error occured. Please try again.');
           }
         })
-        // console.log(this.state);
       }
     }
   
@@ -205,14 +204,14 @@ class LoginForm extends Component {
         forgot: false,
         email: '',
         dob: '0000-00-00',
+        checkmail: false,
+        host: window.location.hostname
       }
     }
   
     _logIn = () => {
-      console.log(this.state);
       API('login', this.state).then((res) => {
         if (res.ok) {
-          console.log(res.data.status);
           if (res.data.status == 1) {
             sessionStorage.setItem('user_data', JSON.stringify(res.data));
             localStorage.setItem('user_data', JSON.stringify(res.data));
@@ -241,7 +240,13 @@ class LoginForm extends Component {
     }
 
     _restorePass = () => {
-      console.log('ressstore');
+      API('restorePassword', this.state).then((res) => {
+        if (res.ok) {
+          this.setState({checkmail: true});
+        } else {
+          alert('Error. Please check your mail and DOB and try again');
+        }
+      })
     }
   
     render() {
@@ -254,15 +259,23 @@ class LoginForm extends Component {
                 <input name='login' onChange={this._textIn} type='text' placeholder="Login or Email" value={this.state.login} className='form-input-sm' />
                 <input name='password' onChange={this._textIn} type='password' placeholder="Password" value={this.state.password} className='form-input-sm' onKeyPress={this._keyPress} />
                 <p className='forgot-pass' onClick={this._forgot}>Forgot Your Password ?</p>
+                <h3 className="enter" onClick={this.state.forgot ? this._restorePass : this._logIn}>Enter</h3>
               </div>
             :
+              this.state.checkmail ?
+                <div>
+                  <h3> Please, check your inbox </h3>
+                  <p className='forgot-pass' onClick={this._forgot}>return</p>
+                </div>
+              :
               <div>
-                <input name='email' onChange={this._textIn} type='email' placeholder="Login or Email" value={this.state.login} className='form-input-sm' />
+                <input name='email' onChange={this._textIn} type='email' placeholder="Login or Email" value={this.state.email} className='form-input-sm' />
                 <input name='dob' onChange={this._textIn} type='date' value={this.state.dob} className='form-input-sm' />
                 <p className='forgot-pass' onClick={this._forgot}>return</p>
+                <h3 className="enter" onClick={this.state.forgot ? this._restorePass : this._logIn}>Enter</h3>
               </div>
             }
-            <h3 className="enter" onClick={this.state.forgot ? this._restorePass : this._logIn}>Enter</h3>
+            {/* <h3 className="enter" onClick={this.state.forgot ? this._restorePass : this._logIn}>Enter</h3> */}
           </div>
           <div className="login-msg-sm">
             <h2 className="cancel-lg" onClick={this.props.close}>Cancel</h2>
